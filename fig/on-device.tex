@@ -1,0 +1,51 @@
+\begin{figure}
+
+\begin{subfigure}[c]{0.21\linewidth}
+  \centering
+%   \includegraphics[width=0.7\linewidth,trim={0 11.05in 7.2in 0in},clip]{binder/binder-wse-sketches/binder/outplots/linear/genomeFlavor=genome_purifyingplus+globalSeed=1.0+nCycle=1000000.0+popSize=562500+replicate=0d82d64b-991d-455b-84d8-cdf9edaad99d+ext=}
+
+%   \vspace{-2ex}
+  \includegraphics[width=\linewidth,trim={0 11.05in 7.2in 0in},clip]{binder/binder-wse-sketches/binder/outplots/log/genomeFlavor=genome_purifyingplus+globalSeed=1.0+nCycle=1000000.0+popSize=562500+replicate=0d82d64b-991d-455b-84d8-cdf9edaad99d+ext=}
+
+  \vspace{-3ex}
+  \footnotesize
+ \caption{\footnotesize adaptive regime}
+  \label{fig:on-device-adaptive}
+\end{subfigure}
+\hfill
+\begin{subfigure}[c]{0.21\linewidth}
+  \centering
+%   \includegraphics[width=0.7\linewidth,trim={0 11.05in 7.2in 0in},clip]{binder/binder-wse-sketches/binder/outplots/linear/genomeFlavor=genome_purifyingonly+globalSeed=1.0+nCycle=1000000.0+popSize=562500+replicate=ce2a0bf2-e132-4a61-95ec-c6ca54213949+ext=}
+
+%   \vspace{-2ex}
+  \includegraphics[width=\linewidth,trim={0 11.05in 7.2in 0in},clip]{binder/binder-wse-sketches/binder/outplots/log/genomeFlavor=genome_purifyingonly+globalSeed=1.0+nCycle=1000000.0+popSize=562500+replicate=ce2a0bf2-e132-4a61-95ec-c6ca54213949+ext=}
+
+  \vspace{-3ex}
+  \footnotesize
+ \caption{\footnotesize purifying regime}
+  \label{fig:on-device-purifying}
+\end{subfigure}%
+\begin{subfigure}[c]{0.53\linewidth}
+  \centering
+    \includegraphics[width=0.9\linewidth]{binder/binder-wse-sketches/binder/teeplots/col=metric+hue=regime+kind=swarm+post=teed-set-titles-col-name+viz=catplot+x=num-pes-10k+y=value+ext=}
+    \vspace{-1.8ex}
+    \caption{\footnotesize adaptive vs. purifying phylometric structure}
+  \label{fig:on-device-phylometrics}
+\end{subfigure}
+
+\vspace{-1.5ex}
+
+\caption{%
+\textbf{On-hardware Trial.}
+\footnotesize
+Results from phylogenetic reconstruction of 1 million generation on-hardware simulations.
+Panel \ref{fig:on-device-phylometrics} compares phylometric readings from purifying-only and adaptation-enabled configurations, 4 replicates each.
+Panels \labelcref{fig:on-device-adaptive,fig:on-device-purifying} juxtapose example $750\times750$ PE simulation phylogenies under each configuration regime.
+Phylometrics were calculated from reconstructions with 10k sampled end-state agents.
+For legibility, phylogeny visualizations were further subsampled to 1k end-state agents.
+Top phylogenies are linear-scaled.
+Bottom phylogenies are log-scaled with ultrametric correction to better show topology.
+Adapted from \citep{moreno2024trackable}.
+}
+\label{fig:on-device}
+\end{figure}

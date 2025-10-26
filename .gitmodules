@@ -28,3 +28,7 @@
 	url = https://github.com/mmore500/hstrat-reconstruction-algo.git
 	branch = binder-2025-05-11-billion-tip-benchmark-v1_20_10.ipynb
 	shallow = true
+[submodule "binder/binder-wse-sketches"]
+	path = binder/binder-wse-sketches
+	url = https://github.com/mmore500/wse-sketches.git
+	branch = binder
