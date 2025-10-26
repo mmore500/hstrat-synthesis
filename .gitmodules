@@ -32,3 +32,7 @@
 	path = binder/binder-wse-sketches
 	url = https://github.com/mmore500/wse-sketches.git
 	branch = binder
+[submodule "binder/binder-hstrat-reconstruction-quality"]
+	path = binder/binder-hstrat-reconstruction-quality
+	url = https://github.com/mmore500/hstrat-reconstruction-quality.git
+	branch = binder
