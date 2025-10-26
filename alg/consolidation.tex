@@ -1,0 +1,43 @@
+\begin{figure}[htb]
+\centering
+\begin{minipage}{0.7\linewidth}
+\begin{algorithm}[H]
+\begin{algorithmic}[l]
+  \small{
+      \Function{ConsolidateTree}{tree $T$, node $n$, rank $r$}
+      \State $S \gets \{c \in \operatorname{descendants}(n) \\~~~~~~~~~~~: \operatorname{rank}(c) \ge r \text{ and }  \operatorname{rank}(\operatorname{parent}(c)) < r\}$
+      \For{$c$ in $S$}
+        \textsc{BuildShortcut}($T$, $n$, $c$)
+      \EndFor
+      \For{ $(r,\;d) \in \{(\operatorname{rank}(s),\; \operatorname{differentia}(s)) : s \in S \}$}
+        \State $S' \gets \{s \in S : \operatorname{rank}(s) = r \text{ and } \operatorname{differentia}(s) = d\}$
+        \If {$|S'| = 1$}
+          \State \textbf{continue}
+        \EndIf
+        \State $c^* \gets$ an arbitrary element in $S'$
+        \For{$c' \in S' \setminus \{c^*\}$}
+          \For{$c''$ in $\operatorname{children}(c')$}
+            \State \textsc{BuildShortcut}($T$, $c^*$, $c''$)
+          \EndFor
+          \State \textsc{RemoveShortcut}($T$, $n$, $c'$)
+        \EndFor
+      \EndFor
+    \EndFunction
+    \Function{BuildShortcut}{tree $T$, node $n$, node $c$}
+      \State $\operatorname{edges}(T) \gets \operatorname{edges}(T) \cup \{(n,\; c)\}$
+      \State $\operatorname{edges}(T)[(n,\; c)]\text{.is\_shortcut} \gets \textsc{True}$
+    \EndFunction
+    \Function{RemoveShortcut}{tree $T$, node $n$, node $c$}
+        \State $\operatorname{edges}(T) \gets \operatorname{edges}(T) \setminus \{(n,\; c)\}$
+    \EndFunction
+  }
+  \end{algorithmic}
+\caption{\textbf{Shortcut-building and consolidation procedure.}
+\footnotesize
+Builds shortcuts from a given node $n$ and collapses ``indistinguishable'' sibling sets introduced by those shortcuts.
+Adapted from \citet{singhvi2025scalable}.
+}
+  \label{alg:consolidation}
+\end{algorithm}
+\end{minipage}
+\end{figure}
