@@ -12,15 +12,19 @@
 	path = binder/binder-2025-10-22-gosper_wse-gol.ipynb
 	url = https://github.com/mmore500/hstrat-agentless-concept.git
 	branch = binder-2025-10-22-gosper_wse-gol.ipynb
+	shallow = true
 [submodule "binder/binder-2025-10-20-mls-strong-fossils__mdcstats__wse-async-ga.ipynb"]
 	path = binder/binder-2025-10-20-mls-strong-fossils__mdcstats__wse-async-ga.ipynb
 	url = https://github.com/mmore500/multilevel-selection-concept.git
 	branch = binder-2025-10-20-mls-strong-fossils__mdcstats__wse-async-ga.ipynb
+	shallow = true
 [submodule "binder/binder-2025-10-20-mls-strong-fossils__wse-async-ga.ipynb"]
 	path = binder/binder-2025-10-20-mls-strong-fossils__wse-async-ga.ipynb
 	url = https://github.com/mmore500/multilevel-selection-concept.git
 	branch = binder-2025-10-20-mls-strong-fossils__wse-async-ga.ipynb
+	shallow = true
 [submodule "binder/binder-2025-05-11-billion-tip-benchmark-v1_20_10.ipynb"]
 	path = binder/binder-2025-05-11-billion-tip-benchmark-v1_20_10.ipynb
 	url = https://github.com/mmore500/hstrat-reconstruction-algo.git
 	branch = binder-2025-05-11-billion-tip-benchmark-v1_20_10.ipynb
+	shallow = true
