@@ -1,8 +1,10 @@
 % adapted from https://github.com/mmore500/hstrat-reconstruction-algo/blob/2d23c78955492eb1bdc70661795951fbc24436ff/fig/billion-tip-time.tex
 \begin{figure}[h]
 \centering
+\begin{minipage}{0.5\linewidth}
 \includegraphics[width=0.8\linewidth]{binder/binder-2025-05-11-billion-tip-benchmark-v1_20_10.ipynb/binder/teeplots/2025-05-11-billion-tip-benchmark-v1_20_10/viz=plot-billion-tip-reconstruction-stack+ext=.pdf}
-\vspace{-1em}
+\end{minipage}%
+\begin{minipage}{0.5\linewidth}
 \caption{%
 \textbf{Execution profile of reconstruction pipeline from macrobenchmark trial.}
 \small
@@ -12,4 +14,5 @@ Other category includes file load and save time as well as hstrat marker explosi
 Adapted from \citet{singhvi2025scalable}.
 }
 \label{fig:billion-tip-time}
+\end{minipage}
 \end{figure}
