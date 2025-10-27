@@ -51,4 +51,4 @@ if ! [ -e "${HOME}/scratch" ]; then
 fi
 
 echo "launch job ============================================================="
-apptainer exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "$(( SLURM_ARRAY_TASK_ID % 2 == 0 ? 32 : 16 ))"
+singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "$(( SLURM_ARRAY_TASK_ID % 2 == 0 ? 32 : 16 ))"
