@@ -7,7 +7,7 @@
 #SBATCH --mail-user=mawni4ah2o@pomail.net
 #SBATCH --mail-type=FAIL,TIME_LIMIT,ARRAY_TASKS
 #SBATCH --requeue
-#SBATCH --array=0-8191
+#SBATCH --array=0-999
 
 set -euo pipefail
 
@@ -50,4 +50,18 @@ if ! [ -e "${HOME}/scratch" ]; then
 fi
 
 echo "launch job ============================================================="
-singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "$(( SLURM_ARRAY_TASK_ID % 2 == 0 ? 32 : 16 ))"
+SLURM_ARRAY_TASK_ID_="$SLURM_ARRAY_TASK_ID"
+echo "SLURM_ARRAY_TASK_ID_ ${SLURM_ARRAY_TASK_ID_}"
+for i in 0 1 2 3 4; do
+    echo "subtask i=${i}"
+    export SLURM_ARRAY_TASK_ID="${SLURM_ARRAY_TASK_ID_}${i}"
+    echo "SLURM_ARRAY_TASK_ID ${SLURM_ARRAY_TASK_ID}"
+    singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "16"
+done
+
+for i in 5 6 7 8 9; do
+    echo "subtask i=${i}"
+    export SLURM_ARRAY_TASK_ID="${SLURM_ARRAY_TASK_ID_}${i}"
+    echo "SLURM_ARRAY_TASK_ID ${SLURM_ARRAY_TASK_ID}"
+    singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "32"
+done
