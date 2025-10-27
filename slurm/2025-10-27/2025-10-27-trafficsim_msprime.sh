@@ -56,12 +56,12 @@ for i in 0 1 2 3 4; do
     echo "subtask i=${i}"
     export SLURM_ARRAY_TASK_ID="${SLURM_ARRAY_TASK_ID_}${i}"
     echo "SLURM_ARRAY_TASK_ID ${SLURM_ARRAY_TASK_ID}"
-    singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "16"
+    singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:28412ab36036c887a93b69955ab4bf5c375623a51518b97e6a6918ed882b9498 python3 -m pylib.trafficsim_msprime "16"
 done
 
 for i in 5 6 7 8 9; do
     echo "subtask i=${i}"
     export SLURM_ARRAY_TASK_ID="${SLURM_ARRAY_TASK_ID_}${i}"
     echo "SLURM_ARRAY_TASK_ID ${SLURM_ARRAY_TASK_ID}"
-    singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:70445f4dc3b41a137d4f79284feaa045f7ff8f0d802518cbdf53a05bbab86b74 python3 -m pylib.trafficsim_msprime "32"
+    singularity exec docker://ghcr.io/mmore500/hstrat-synthesis@sha256:28412ab36036c887a93b69955ab4bf5c375623a51518b97e6a6918ed882b9498 python3 -m pylib.trafficsim_msprime "32"
 done
