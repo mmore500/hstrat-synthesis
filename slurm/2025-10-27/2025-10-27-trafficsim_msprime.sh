@@ -6,7 +6,6 @@
 #SBATCH --output="/mnt/home/%u/joblog/%j"
 #SBATCH --mail-user=mawni4ah2o@pomail.net
 #SBATCH --mail-type=FAIL,TIME_LIMIT,ARRAY_TASKS
-#SBATCH --account=ecode
 #SBATCH --requeue
 #SBATCH --array=0-8191
 
