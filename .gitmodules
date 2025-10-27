@@ -2,3 +2,7 @@
 	path = tex
 	url = https://github.com/mmore500/hstrat-synthesis.git
 	branch = tex
+[submodule "binder/binder-wse-sketches"]
+	path = binder/binder-wse-sketches
+	url = https://github.com/mmore500/wse-sketches.git
+	branch = binder
