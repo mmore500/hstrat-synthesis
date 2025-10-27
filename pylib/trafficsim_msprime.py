@@ -63,11 +63,11 @@ if __name__ == "__main__":
     logging.info(f"{slurm_array_task_id=}")
 
     grid_dim = int(sys.argv[1])
-    num_alleles = int(sys.argv[2])
-    ploidy = int(sys.argv[3])
+    num_alleles = 512
+    ploidy = 1
     num_demes = grid_dim * grid_dim
     deme_size = num_alleles // ploidy
-    migration_rate = 1 / 32  # ~3%
+    migration_rate = 1 / 20  # 5%
     random_seed = int(os.getenv("SLURM_ARRAY_TASK_ID", 0)) + 1
 
     config = {
