@@ -63,16 +63,20 @@ if __name__ == "__main__":
     logging.info(f"{slurm_array_task_id=}")
 
     grid_dim = int(sys.argv[1])
+    num_alleles = 512
+    ploidy = 1
     num_demes = grid_dim * grid_dim
-    deme_size = 256
-    migration_rate = 4 / deme_size  # symmetric rate between adjacent demes
+    deme_size = num_alleles // ploidy
+    migration_rate = 1 / 20  # 5%
     random_seed = int(os.getenv("SLURM_ARRAY_TASK_ID", 0)) + 1
 
     config = {
         "grid_dim": grid_dim,
+        "num_alleles": num_alleles,
         "num_demes": num_demes,
         "deme_size": deme_size,
         "migration_rate": migration_rate,
+        "ploidy": ploidy,
         "random_seed": random_seed,
         "slurm_array_task_id": slurm_array_task_id,
     }
@@ -93,6 +97,7 @@ if __name__ == "__main__":
         additional_nodes=msprime.NodeType.MIGRANT,
         coalescing_segments_only=False,
         demography=demography,
+        ploidy=ploidy,
         random_seed=random_seed,
         samples=sample_sets,
     )
