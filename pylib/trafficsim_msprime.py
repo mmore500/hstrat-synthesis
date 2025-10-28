@@ -67,7 +67,7 @@ if __name__ == "__main__":
     ploidy = 1
     num_demes = grid_dim * grid_dim
     deme_size = num_alleles // ploidy
-    migration_rate = 1 / 32  # 5%
+    migration_rate = 1 / 20  # 5%
     random_seed = int(os.getenv("SLURM_ARRAY_TASK_ID", 0)) + 1
 
     config = {
