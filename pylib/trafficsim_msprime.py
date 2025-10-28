@@ -183,5 +183,5 @@ if __name__ == "__main__":
 
     filename = f"a=duration+{slurm_array_task_id=}+ext=.pqt"
     logging.info(f"saving duration_df to {filename}...")
-    traffic_df.to_parquet(filename)
+    duration_df.to_parquet(filename)
     logging.info("... done!")
