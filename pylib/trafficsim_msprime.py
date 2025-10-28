@@ -130,20 +130,36 @@ if __name__ == "__main__":
     logging.info("... done!")
 
     logging.info("tabulating migration counts by population...")
-    migrations_df = edge_df.loc[
-        edge_df["population"] != edge_df["ancestor_population"],
-        "population",
-    ].value_counts()
-    traffic_df = (
-        migrations_df.rename_axis("population")
-        .reset_index(name="migration_count")
-        .assign(**config)
-    )
+    dfs = []
+    for time_thresh in (
+        30_000,
+        50_000,
+        100_000,
+        300_000,
+        500_000,
+        1_000_000,
+        np.inf,
+    ):
+        logging.info(f"... at time_thresh={time_thresh}...")
+        migrations_df = edge_df.loc[
+            (edge_df["population"] != edge_df["ancestor_population"])
+            & (edge_df["origin_time"] <= time_thresh),
+            "population",
+        ].value_counts()
+        traffic_df = (
+            migrations_df.rename_axis("population")
+            .reset_index(name="migration_count")
+            .assign(**config)
+        )
+        traffic_df["time_thresh"] = time_thresh
+        dfs.append(traffic_df)
+
+    logging.info("concatenating traffic dfs...")
+    traffic_df = pd.concat(dfs, ignore_index=True)
     logging.info("... done!")
     logging.info(f"traffic_df shape: {traffic_df.shape}")
     logging.info(f"{traffic_df.describe()=}")
     logging.info(f"{traffic_df.head()=}")
-    assert len(traffic_df) == num_demes
 
     filename = f"a=traffic+{slurm_array_task_id=}+ext=.pqt"
     logging.info(f"saving traffic_df to {filename}...")
