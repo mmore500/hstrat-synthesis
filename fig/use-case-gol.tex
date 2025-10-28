@@ -1,15 +1,30 @@
 \begin{figure}
 
-\begin{minipage}[c]{0.7\linewidth}%
+\begin{minipage}[c]{1.0\linewidth}%
 \vspace*{0pt}%
-\begin{subfigure}[t]{0.25\linewidth}
-    TODO schematic
+\begin{subfigure}[]{0.35\linewidth}
+    \centering
+\begin{align*}
+    S_{\fontsize{2}{12} \selectfont x,\; y}'
+    \gets&
+    \begin{cases}
+        1 & \text{if } S_{\fontsize{2}{12} \selectfont x,\; y}' = 0 \text{ and } N(x,\; y) = 3\\[-1ex]
+          &\hspace{15ex}\text{\small\textit{(birth)}}\\
+        1 & \text{if } S_{\fontsize{2}{12} \selectfont x,\; y}' = 1 \text{ and } N(x,\; y) \in \{2,\; 3\}\\[-1ex]
+          &\hspace{15ex}\text{\small\textit{(survival)}}\\
+        0 & \text{otherwise} \hspace{7ex}\text{\small\textit{(death)}}
+    \end{cases}\\
+    & \text{where } N(x,\; y) \coloneqq \sum_{(i,\; j) \in \mathcal{N}(x,\; y)} S_{\fontsize{2}{12} \selectfont i,\; j}.
+\end{align*}
+\vspace{-3ex}
+    \includegraphics[width=\linewidth, trim={0 0.5cm 0 0}, clip]{img/hstrat-synthesis-ca-update.pdf}
+    Text here
     \caption{\footnotesize
     TODO.
     }
     \label{fig:use-case-gol:schematic}
 \end{subfigure}%
-\begin{subfigure}[t]{0.75\linewidth}
+\begin{subfigure}[]{0.65\linewidth}
     \centering
     \includegraphics[width=\linewidth]{binder/binder-2025-10-22-gosper_wse-gol.ipynb/binder/teeplots/2025-10-22-gosper_wse-gol/surf=0+viz=subplots+ext=.pdf}
     \caption{\footnotesize
@@ -18,13 +33,14 @@
     \label{fig:use-case-gol:phylo}
 \end{subfigure}
 \end{minipage}%
-\begin{minipage}[c]{0.3\linewidth}%
-\vspace{0pt}%
+
+% \begin{minipage}[c]{0.3\linewidth}%
+% \vspace{0pt}%
 \caption{%
 \textbf{TODO.}
 \footnotesize
 TODO.
 }
 \label{fig:use-case-gol}
-\end{minipage}
+% \end{minipage}
 \end{figure}
