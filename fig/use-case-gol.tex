@@ -16,9 +16,14 @@
     \end{cases}\\
     & \text{where } N(x,\; y) \coloneqq \sum_{(i,\; j) \in \mathcal{N}(x,\; y)} S_{\fontsize{2}{12} \selectfont i,\; j}.
 \end{align*}
-\vspace{-3ex}
-    \includegraphics[width=\linewidth, trim={0 0.5cm 0 0}, clip]{img/hstrat-synthesis-ca-update.pdf}
-    Text here
+\vspace{-3.7ex}
+    \includegraphics[width=\linewidth, trim={0 0.5cm 0 0}, clip]{img/hstrat-synthesis-ca-update.pdf}\vspace{-2.5ex}
+    \begin{align*}
+    &M_{\fontsize{2}{12} \selectfont x,\; y}'
+    \stackrel{\substack{\text{\tiny random} \\[-0.7ex] \text{\tiny choice} \\[0.5ex] }}{\longleftarrow}
+    \{g(M_{\fontsize{2}{12} \selectfont i,\; j}) \mid (i,\; j) \in L(x,\; y)\}\\
+    &\text{where } L(x,\; y) =  \{(i,\; j) \in \mathcal{N}(x,\; y) \mid S_{\fontsize{2}{12} \selectfont i,\; j}=1\}.
+\end{align*}
     \caption{\footnotesize
     TODO.
     }
