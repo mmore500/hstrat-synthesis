@@ -36,3 +36,7 @@
 	path = binder/binder-hstrat-reconstruction-quality
 	url = https://github.com/mmore500/hstrat-reconstruction-quality.git
 	branch = binder
+[submodule "binder/binder-2025-10-28-trafficsim_msprime.ipynb"]
+	path = binder/binder-2025-10-28-trafficsim_msprime.ipynb
+	url = https://github.com/mmore500/hstrat-synthesis.git
+	branch = binder-2025-10-28-trafficsim_msprime.ipynb
