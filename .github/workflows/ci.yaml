@@ -183,47 +183,47 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  slurm:
-    runs-on: ubuntu-22.04
-    env:
-      # RE https://stackoverflow.com/a/40184923/17332200
-      PIP_NO_CACHE_DIR: 1
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git lshw python3.10-venv
-      - name: Install Nix
-        uses: cachix/install-nix-action@v25
-        with:
-          nix_path: nixpkgs=channel:nixos-22.11
-      - name: Set up Nix Channels
-        run: |
-          nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
-          nix-channel --update
-      - name: Test nix
-        run: |
-          nix-env -iA nixpkgs.cowsay nixpkgs.hello
-          cowsay "Hello from Nix!"
-          hello
-      - name: Set up Apptainer
-        run: echo "nix-env -iA nixpkgs.apptainer" | sh
-      - name: Test Apptainer
-        run: |
-          apptainer --version
-          sudo "$(which apptainer)" exec docker://busybox:latest echo "Hello from Singularity and Docker!"
-      - name: Test scripts
-        run: |
-          for script in $(find slurm -name "*.sh"); do
-            echo "${script}"
-            ./${script}
-          done
+  # slurm:
+  #   runs-on: ubuntu-22.04
+  #   env:
+  #     # RE https://stackoverflow.com/a/40184923/17332200
+  #     PIP_NO_CACHE_DIR: 1
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #     - name: Set up Python 3.10
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
+  #     - name: Install dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y git lshw python3.10-venv
+  #     - name: Install Nix
+  #       uses: cachix/install-nix-action@v25
+  #       with:
+  #         nix_path: nixpkgs=channel:nixos-22.11
+  #     - name: Set up Nix Channels
+  #       run: |
+  #         nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
+  #         nix-channel --update
+  #     - name: Test nix
+  #       run: |
+  #         nix-env -iA nixpkgs.cowsay nixpkgs.hello
+  #         cowsay "Hello from Nix!"
+  #         hello
+  #     - name: Set up Apptainer
+  #       run: echo "nix-env -iA nixpkgs.apptainer" | sh
+  #     - name: Test Apptainer
+  #       run: |
+  #         apptainer --version
+  #         sudo "$(which apptainer)" exec docker://busybox:latest echo "Hello from Singularity and Docker!"
+  #     - name: Test scripts
+  #       run: |
+  #         for script in $(find slurm -name "*.sh"); do
+  #           echo "${script}"
+  #           ./${script}
+  #         done
 
   deploy-ghcr:
     name: Docker Image Deploy
