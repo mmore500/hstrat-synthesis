@@ -6,29 +6,46 @@
 \item blurb about AI/ML accelerators (steal from current surface draft?)
 \item explain importance of phylogeny data
 \item blurb about reconstruction vs. tracking (Figure \ref{fig:tracking-vs-reconstruction-schematic})
-\item blurb aboyt difficulty tracking phylogenies in highly-distributed settings
+    \begin{itemize}
+    \item note CRISPR/barcode-based approaches used in experimental biology
+    \item note reconstruction quality trade-off (Figure \ref{fig:colorclade})
+    \item emphasize that direct tracking is the most common choice for existing serial applications
+    \end{itemize}
+\item blurb about difficulty tracking phylogenies in highly-distributed settings
    \begin{itemize}
-   \item extinction tracking TODO cite arxiv
-   \item memory use in distributed settings (Figure \ref{fig:msprime-memory-estimate.tex})
-   \item note about comptime-known memory use (nondynamic) and implementaation simplicity
+   \item extinction tracking (cite arxiv/phylotrackpy)
+   \item memory use in distributed settings (Figure \ref{fig:msprime-memory-estimate})
+   \item note about implementation simplicity
+      \begin{itemize}
+      \item although not a major issue from a theoretical angle, in practice implementation complexity is a major issue from a practical angle (especially given the vendor-/hardware-specific programming languages among emerging accelerators)
+      \item predictable memory use (comptime-known, non-dynamic memory)
+      \item communication patterns/routes (no additional PE-to-PE or host-sevice communication beyond migration)
+      \end{itemize}
+   \item data loss/node failure; indefinite scalability
    \end{itemize}
-\item burb about statistical observability (borrow from EXPRESS grant)
-\item tie to OEE (alife) and to multiscale modeling (evolutionary biology)
+\item burb about broader topic of statistical observability (borrow from EXPRESS grant)
+\item tie to OEE (alife) and to multiscale modeling (complex systems/evolutionary biology)
 \item outline paper results and contribution
    \begin{itemize}
-   \item introducing novel methodology for distrobuted tracking
-   \item motivating use with examples on next-generation hardeare (e.g., WSE)
+   \item introducing novel approach for distributed tracking in HPC, inspired by
+   \item introducing efficient algorithms for marker layout and reconstruction
    \item providing evidence-based guidelines for effective use (steady vs. tilted vs. hybrid, num bits in column, fossils)
-   \item broader paradigm of statistical observability in HPC --- using statistics from working with physical systems)
+   \item item motivating use with examples on next-generation hardeare (e.g., WSE)
+   \item broader paradigm of best-effort/statistical observability in HPC --- using statistics from working with physical systems)
    \end{itemize}
 \end{itemize}
 
 \subsection{methods outline}
 
 \begin{itemize}
-\item reconstruction algorithm overview
-\item configuratuons for various WSE-2 and WSE-3 experiments
-\item supplement: overview of where to find different parts of code
+\item technical details of hereditary stratigraphy \citep{moreno2024algorithms}; briefly note history (columns, as originally proposed in \citep{moreno2022hereditary})
+\item reconstruction algorithm overview (Figure \ref{fig:algorithm-diatram}, Algorithm \ref{fig:consolidation}); briefly note history (distance-based approaches in \citep{moreno2022hereditary}, naive algorithm in \citep{moreno2023toward})
+\item msprime methods used to create estimates in Figure \ref{fig:msprime-memory-estimate}
+\item transplant experiment setup from \citep{moreno2025testing}, will need to describe new fossil quality trials
+\item transplant benchmark setup from \citep{singhvi2025scalable}
+\item configurations for various WSE-2 and WSE-3 demonstrations
+\item open-source software acknowledgement (incl \citep{zanini2025unified})
+\item supplement: overview of where to find different parts of code (because spread across projects)
 \end{itemize}
 
 \subsection{results outline}
@@ -36,17 +53,18 @@
 \begin{itemize}
 \item reconstruction quality
    \begin{itemize}
-   \item steady vs. tilted vs. hybrid results (Figure \ref{fig:moreno2025testing})
-   \item TODO Vivaan fossil reconstruction quality results
+   \item steady vs. tilted vs. hybrid results (\Cref{fig:steady-vs-tilted-summary,fig:recency-structure} \citep{moreno2025testing})
+   \item TODO new fossil reconstruction quality results (Vivaan)
    \end{itemize}
 \item reconstruction algorithm
    \begin{itemize}
   \item scaling behavior (\Cref{fig:asymptotic,fig:scaling} \citep{singhvi2025scalable})
    \item billion tip reconstruction profile (Figure \ref{fig:billion-tip-time} \citep{singhvi2025scalable})
-   \item TODO (supplement) Vivaan reconsteruction quality comparisons vs. naive
+   \item TODO (supplement) new reconstruction quality comparisons vs. naive (Vivaan)
    \end{itemize}
 \item demonstrations
   \begin{enumerate}
+  \item on-device cost benchmark from \citep{moreno2024trackable}
   \item phylogeny topology: purifying vs. adaptive (Figure \ref{fig:on-device}) \citep{moreno2024trackable}
   \item phylogeny trait distribution: preliminary WSE MLS results (Figure \ref{fig:use-case-mls} \citep{moreno2025extending})
   \item cellular automata (WSE3 demo, Figure \ref{fig:use-case-gol}, cite cliff?)
@@ -56,7 +74,13 @@
 \subsection{conclusion outline}
 
 \begin{itemize}
-\item TODO
+\item note overlap with exact tracking via imaging in e.g., E coli
+\item what do you do with a billion tip phylogeny?
+   \begin{itemize}
+   \item pipeline builds trees efficiently enough that analysis and visualization become the bottleneck
+   \item broader emerging problem --- e.g., very large reconstructions from CRISPR barcoding paper
+   \item transplant software ecosystem blurb from \citep{singhvi2025scalable}
+   \end{itemize}
 \end{itemize}
 
 \subsection{Introduction Figures}
