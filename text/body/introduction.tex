@@ -1,40 +1,51 @@
 \section{Introduction} \label{sec:introduction}
 
-In recent years, substantial investments in high-performance computing hardware development have been shaped by large-scale AI/ML workloads.
-At present, GPU accelerators have advanced rapidly as a \textit{de facto} backbone for high-throughput floating point operations \citep{unat2024landscape}.
-However, key steps are also being made by a growing roster of alternate emerging AI/ML accelerator hardware platforms --- such as Graphcore IPU, SambaNova RDU, and TensTorrent Tensix \citep{lauterbach2021path,jia2019dissecting}.
+In recent years, substantial investments in high-performance computing (HPC) hardware development have been shaped around large-scale AI/ML workloads.
+Indeed, GPU accelerators have advanced rapidly as a \textit{de facto} backbone for high-throughput floating point operations \citep{unat2024landscape}.
+Key steps, though, are also being made by a growing roster of alternate emerging AI/ML accelerator hardware platforms --- such as Graphcore IPU, SambaNova RDU, and TensTorrent Tensix \citep{jia2019dissecting}.
 
-Although diverse in underlying chipsets, key common architectural themes among these emerging platforms include fine-grained memory localization and dynamic dataflow-driven computation.
-While allowing assembly of high processor counts each operating efficiently, design trade-offs impose several characteristic challenges.
-Communication may be localized, mirroring physical layout of processor cores.
-On-device memory can be scarce relative to compute.
-Finally, as typical in accelerator hardware, bottlenecks can arise in bandwidth and latency of host-device communication.
+Although highly diverse, these emerging platforms generally align along two key themes: sharded memory spaces and dynamic dataflow-driven computation.
+While these traits facilitate large processor counts with high parallel efficiency, they also impose challenges for effective utilization.
+On-chip communication topology is often localized, in a manner mirroring physical layout of processor cores.
+Furthermore, with large processor counts, device memory can become scarce relative to compute.
+Finally, bottlenecks can arise in host-device bandwidth and latency, as typical for accelerator hardware.
 
-At the extreme end of these principles, perhaps, is epitomized by the Cerebras Wafer-Scale Engine (WSE) --- a grid layout of .
-In extreme cases, such as the Cerebras Wafer-scale Engine, this trend manifests in the extreme with a mere 48kb of memory available per processor.
-Host-deveice communication occurs exclusively at the periphery of the chip, introducing limitations to the visibility of computation at the chip interior.
-900,000 processing elements (PEs) within a single device, allowing recent data center installations to reach net capacities 44 exaflops \citep{Feldman2025CerebrasOKC}
-Although originally developed for AI/ML, these emerging hardware architectures exhibit substantial opportunity for traditional HPC workloads \citep{TODO}, and have already produced several Gram-Bell winning projects \citep{TODO}.
+The Cerebras Wafer-Scale Engine (WSE) illustrates an extreme example of this trend.
+The architecture packages a remarkable 900,000 independent processing elements (PEs) per die, allowing recent data center installations to reach net capacity up to 44 exaflops \citep{lauterbach2021path,Feldman2025CerebrasOKC}.
+On the other hand, programming challenges are also formidable.
+Each PE provisions a mere 48kb of memory, on-chip communication requires many-hop routing across a dense mesh of local grid connections, direct host-device communication is restricted to the small subset of PEs along the chip's periphery, and floating point operations support only half precision.
 
-Adapting algorithms to these highly-distrubuted highly distributed, many-processor computation is therefore a pressing need and great opportunity.
-Here, we focus on the problem of collecting history of branching processes a hardware-accelerator distributed approach to from hardware accelerator simulations.
-Understanding the structure of branching processes, arising in phylogeny data (i.e., ancestry trees) in particular, has arisen as a cornerstone of modern evolutionary biology --- TODO parenthetical from elsewhere.
+Tailored within AI/ML accelerator constraints, however, general-purpose HPC applications have produced transformative speedups \citep{TODO} --- in recent years, notably including several Gordon Bell finalists \citep{TODO}.
+% look for cites in hstrat surface concept
+As such, contributions bridging novel workloads to these devices are of high potential impact.
+Furthermore, developed strategies may pertain to broader classes of unconventional computing substrates that are similarly resource-constrained and highly-distributed --- such as TODO and TODO \citep{TODO}.
+
+In this paper, we focus on the problem of collecting ancestry tree history of branching processes a hardware-accelerator distributed approach to from hardware accelerator simulations.
+
+\subsection{Roles of Ancestry Trees}
+
+Understanding the structure of branching processes, arising in phylogeny data (i.e., ancestry trees) in particular, has arisen as a cornerstone of modern evolutionary biology \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lewinsohnStatedependentEvolutionaryModels2023a,lenski2003evolutionary}.
 However, branching processes play key roles in a number of domains outside evolutionary studies.
 For instance, pathogen transmission trees have become a core part of epidemiological informatics to infer transmission dynamics \citep{TODO}.
+phylogenetic structure of pathogens has been used to characterize infection and transmission dynamics within the host population \citep{giardina2017inference,voznica2022deep}.
 Important branching processes also arise in chain reactions in chemistry and nuclear physics \citep{UsonFornies1999,Pazsit2007}.
 Phylogenetic history of branching processes has also been applied in astronomical stidies of galaxy history \citep{Jofr2017}.
+Biological simulations are one sort of simulation that could move over to these platforms, because these systems are typically studied through partial observation and are highly robust to e.g., lower precision computations (32-bit) due to their underlying stochastic nature.
 
+\subsection{Exact Tracking of Ancestry Trees}
 
-The core challenge of tracking ancestry trees is memory use.
-Typical practice to record phylogeny, the structure of lineage relatedness over evolutionary time, is to accrete every parent-child relationship as it occurs to create a comprehensive tree data structure \citep{moreno2024algorithms}.
-In serial settings, a common approach is to  particularly when extinct lineages are pruned away \citep{dolson2024phylotrackpy}.
-This approach produces an exact record and can be highly performant ---
+A core challenge of tracking ancestry trees is memory use.
+Typical practice to record phylogeny, the structure of lineage relatedness over evolutionary time, is to accrete every parent-child relationship as it occurs to create a comprehensive tree data structure \citep{moreno2024algorithms} (Figure \ref{fig:tracking-vs-reconstruction-schematic:tracking}).
+In serial settings, a common approach is to particularly when extinct lineages are pruned away \citep{dolson2024phylotrackpy}.
+This approach produces an exact record and can be highly performant.
 
 Difficulties arise, however, in extrapolating this approach to a distributed computing context, related to communication overhead of detecting lineage extinctions and sensitivity to data loss \citep{moreno2024algorithms}.
-Even in the case were were distributed extinction tracking implemented, under conditions with substantial migration between nodes, direct tracking would encompass a substantially larger memory footprint, as shown in Figure \ref{fig:msprime-memory-estimate}.
-Memory use is dynamic and implementation is complex, with communication and connunication buffer overhead.
+Even in the case were were distributed extinction tracking implemented, under conditions with substantial migration between nodes, direct tracking would encompass a substantial  memory footprint (Figure \ref{fig:msprime-memory-estimate}).
+Memory use is dynamic and implementation is complex, with communication and communication buffer overhead.
  --- a big problem due to the high splinterization of the development ecosystem on proprietary platforms.
-In very large or ambitious computing contexts, direct tracking is also susceptible to data loss --- making them incompatible for very-large workloads where hardware failure is expected and a candidate for even more ambitious scalable best-effort architectures (TODO cite Ackley).
+In very large or ambitious computing contexts, direct tracking is also susceptible to data loss --- making them incompatible for very-large workloads where hardware failure is expected and a candidate for even more ambitious scalable best-effort architectures \citep{TODOackley}.
+
+\subsection{Reconstruction-based Approaches}
 
 To get around these issues, we look for inspiration to work with how evolutionary biologists typically work with phylogeny data.
 As is often the case in digital evolution, natural systems provide inspiration for the core strategy applied in hereditary stratigraphy: inference-based reconstruction.
@@ -48,34 +59,22 @@ The idea is to bundle agent genomes with special hereditary stratigraphic annota
 The crux of hereditary stratigraphy algorithms, introduced in detail further on, is organization of genetic material to maximize reconstruction quality from a minimal memory footprint \citep{moreno2022hereditary}.
 
 In the context of evolutionary computation, the existing approach to collecting phylogenetic history is emblematic of this existing complete-observability paradigm.
-Biological simulations are one sort of simulation that could move over to these platforms, because these systems are typically studied through partial observation and are highly robust to e.g., lower precision computations (32-bit) due to their underlying stochastic nature.
-
-
 Historically, most research using ABM has assumed complete observability of model state.
 Indeed, the ability to measure properties \textit{in silico} that would be impossible to observe \textit{in vitro} or \textit{in vivo} is a major benefit of scientific work using ABM.
 To advance on this front, we propose a fundamental re-frame of simulation that shifts from a paradigm of ``complete,'' deterministic observability of simulation state to instead collect data through dynamic, partial, and potentially best-effort sampling akin to approaches traditionally used to study real-world systems (e.g., ice core samples, paleontological fossils).
 The aim of this strategy is to resolve scaling bottlenecks by economizing use of interconnect bandwidth, memory, and disk storage storage and better tolerating intermittent disruption.
 Trading a controlled amount of data detail for increased scalability and hardware accelerator compatibility would be highly worthwhile.
 
-Notably, evolutionary biology is closely intertwined with sister fields of artificial life and evolutionry computation --- the latter strongly on the side of application-oriented objectives and the former straddling the divide.
-However, even in these cases, being able to collect data is important --- as understanding underlying evolutionary dynamics is key to troubleshooting and fine-tuning methodology and parameterization.
-TODO cites
-
 Phylogenetic analysis is integral to much of evolution research, whether conducted \textit{in vivo} or \textit{in silico} \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lewinsohnStatedependentEvolutionaryModels2023a,lenski2003evolutionary}.
 In addition to tracing the history of notable evolutionary events such as extinctions or evolutionary innovations, phylogenetic analysis can also characterize more general questions about the underlying mode and tempo of evolution \citep{moreno2023toward,hernandez2022can,shahbandegan2022untangling,lewinsohnStatedependentEvolutionaryModels2023a}.
-One notable application is in evolutionary epidemiology, where phylogenetic structure of pathogens has been used to characterize infection and transmission dynamics within the host population \citep{giardina2017inference,voznica2022deep}.
+Notably, evolutionary biology is closely intertwined with sister fields of artificial life and evolutionry computation --- the latter strongly on the side of application-oriented objectives and the former straddling the divide.
+However, even in these cases, being able to collect data is important --- as understanding underlying evolutionary dynamics is key to troubleshooting and fine-tuning methodology and parameterization \citep{TODO}.
 For application-oriented evolutionary computation, phylogenetic information can even be used to guide evolution toward desired outcomes \citep{lalejini2024phylogeny,lalejini2024runtime,murphy2008simple,burke2003increased}.
 Entirely forfeiting capability to collect phylogenetic information on account of these challenges, though, would significantly reduce the utility of simulation-based evolution experiments and reduce insight into the nuts and bolts of application-oriented evolutionary optimization.
-Phylogenetic analysis is integral to much of evolution research, whether conducted \textit{in vivo} or \textit{in silico} \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lewinsohnStatedependentEvolutionaryModels2023a,lenski2003evolutionary}.
-In addition to tracing the history of notable evolutionary events such as extinctions or evolutionary innovations, phylogenetic analysis can also characterize more general questions about the underlying mode and tempo of evolution \citep{moreno2023toward,hernandez2022can,shahbandegan2022untangling,lewinsohnStatedependentEvolutionaryModels2023a}.
-One notable application is in evolutionary epidemiology, where phylogenetic structure of pathogens has been used to characterize infection and transmission dynamics within the host population \citep{giardina2017inference,voznica2022deep}.
-For application-oriented evolutionary computation, phylogenetic information can even be used to guide evolution toward desired outcomes \citep{lalejini2024phylogeny,lalejini2024runtime,murphy2008simple,burke2003increased}.
-
 
 \subsection{Hereditary Stratigraphy}
 
 Recently developed ``hereditary stratigraphy'' methodology aims to bridge this gap by providing means for extracting phylogenetic information from distributed simulations that are efficient, robust, and straightforward to use \citep{moreno2022hereditary}.
-%
 
 Since it was proposed, experimental work using hereditary stratigraphy has demonstrated viability in extracting information about underlying evolutionary conditions \citep{moreno2024ecology}, even at population scales reaching millions of agents/millions of generations using the 850,000 core Cerebras Wafer-Scale Engine hardware accelerator \citep{moreno2024trackable}.
 
