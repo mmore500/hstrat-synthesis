@@ -1,1 +1,110 @@
 \section{Conclusion} \label{sec:conclusion}
+
+\section{Conclusion} \label{sec:conclusion}
+
+Computing hardware with transformative capabilities is presently coming to market.
+This fact presents an immediate opportunity to bring orders-of-magnitude greater simulation scale to bear on grand challenges in artificial life.
+It is not unreasonable to anticipate the possibility that with such resources some aspects of these open questions will be revealed to harbor more-is-different dispositions, in which larger scales reveal qualitatively different dynamics \citep{anderson1972more}.
+Riding the coattails of AI-workload-driven hardware development, itself largely driven by profound more-is-different payoffs in deep learning, provides perhaps the most immediate means toward this possibility.
+
+Such an endeavor is a community-level challenge that will require significant resources and collaborative effort.
+Work presented here is an early step in methods and infrastructure development necessary to scale up what is possible in digital evolution research.
+We have demonstrated new algorithms and software for phylogeny-enabled agent-based evolution on a next-generation HPC accelerator hardware platform.
+Microbenchmarking results show that proposed instrumentation algorithms achieve several-fold improvement in computational efficiency.
+Related work shows new algorithms to improve reconstruction quality in some cases, too \citep{moreno2024guide}.
+Benchmarks confirm that, including tracking operations, simple models at wafer scale can achieve quintillions of replications per day.
+In future work, it will be necessary to move beyond proof-of-concept and explore the limits of these capabilities in the context of more demanding, interaction-intensive models.
+
+Special characteristics set agent-based digital evolution apart from many other HPC application domains and position it as a potentially valuable testbed for innovation and leadership.
+Among these factors are challenging workload heterogeneity (varying within a population and over evolutionary time), resiliency of global state to local perturbations, and perhaps substantial freedom to recompose underlying simulation semantics to accommodate hardware capabilities.
+Indeed, artificial life and digital evolution have played host to notable boundary-pushing approaches to computing at the frontiers of computing modalities such as best-effort computing, reservoir computing, global-scale time-available computing, and modular tile-based computing in addition to more traditional cluster and GPU-oriented approaches \citep{moreno2021conduit,ackley2020best,ackley2023robust,heinemann2008artificial,miikkulainen2024evolving,ray1995proposal}.
+Work done to scale up digital evolution simulation should be done with an eye for contributions back to broader HPC constituencies.
+
+In this vein, presented ``surface'' indexing algorithms stand to benefit larger classes of stream curation problems, situations in which a rolling feed of sequenced observations must be dynamically downsampled to ensure retention of elements representative across observed history \citep{moreno2024algorithms}.
+In particular, to further benefit observable agent-based modeling, we are interested in exploring applications that sample time-series activity at simulation sites or distill coarsened agent histories (e.g., position over time).
+
+Our goal in this work is to build new capabilities that empower research agendas across the digital evolution and artificial life community.
+To this end, we have prioritized making our CSL and Python software easily reusable by other researchers.
+In particular, CSL code implementing the presented island-model GA is modularized and extensible for drop-in customization to instantiate any fixed-length genome content and fitness criteria.
+We look forward to collaboration in broader tandem efforts to harness the Cerebras platform, and other emerging hardware, in follow-on work.
+
+\section{Conclusion} \label{sec:conclusion}
+
+We have presented and benchmarked a new algorithm for phylogenetic reconstruction from synthetic hstrat \citep{moreno2024hstrat} data with significantly better performance, both empirically and asymptotically, rectifying the existing bottleneck of slow phylogenetic reconstruction in wafer-scale distributed simulations.
+
+The scope of scientific questions tractable to investigation \textit{in silico} continues to be broadened by rapid advances in computing technology.
+However, such advances also pose new challenges in managing vast quantities of data.
+By providing scalable means for fast phyloanalysis of large simulations, our work seeks to help the scientific utility of parallel and distributed digital evolution experiments keep pace with opportunities afforded by emerging hardware architectures.
+
+In a parallel vein, the volume of data processed in bioinformatics workflows is also increasing with continuing advances in high-throughput sequencing technologies, enabling the construction of phylogenies containing millions of taxa.
+As an illustrative example at the cutting edge of extreme scale, \citet{konno2022deep} reports phylogeny synthesis from 235 million sequence reads generated from an \textit{in silico} CRISPR barcoding model --- requiring 31 hours of compute time across 300 HPC nodes.
+% In digital evolution, sampling approaches and reconstruction algorithms such as the one presented in this paper can process billions of tips in a matter of hours.
+
+In both the context of bioinformatics and artificial life research, very large-scale phylogeny data enabled by advances in sequencing and computing technology represent a new challenge as much as an opportunity, raising the question of how best to mine this data.
+On a practical level, work is needed not just to push the boundaries of what can be learned from phylogenies, but also how to store, load, traverse, quantify, visualize, and manipulate very large phylogenies in an efficient manner.
+Indeed, projects are being developed to try to address this issue.
+For example, taxonium \citep{sanderson2022taxonium} is a web-based software for visualizing large phylogenies in a flexible, interactive manner, and is able to handle browsing millions of tips at a high frame rate.
+Other projects aim to create methods for compact, scalable phylogeny representations \citep{moshiri2025compacttree, moshiri2020treeswift}, enabling faster and more memory-efficient tree operations.
+
+\subsection{Future Work}
+
+In pushing the boundaries of phylogenetic scale to billion-tip datasets, ALife research has the opportunity to contribute to an interdisciplinary ecosystem of software tools developing around working with very large-scale phylogenies.
+In particular, the ALife data standard, which specifies a tabular representation for phylogeny data \citep{Lalejini2019data}, has strong potential to contribute to a larger high-performance phylogeny processing infrastructure.
+Although originally envisioned as a data storage format, the tabular nature of the standard allows integrations with high-performance software tools built around the ``dataframe'' concept, including Pandas, Polars, Dask, and data.table.
+These libraries provide a structured, user-friendly interface to advanced performance features such as multithreading, data streaming, query optimization, file partitioning, and column-oriented binary file formats \citep{mckinney2010data,datatable,vink2024polars,rocklin2015dask}.
+Additionally, for Python users, the columnar array format typical in dataframe libraries is compatible with NumPy and Numba, readily enabling on-the-fly SIMD vectorization and just-in-time compilation \citep{harris2020array,lam2015numba}.
+Indeed, this approach underlies much of the pre- and post-processing steps for end-to-end reconstruction demonstrated in this work.
+
+Of more direct bearing to phylogeny reconstruction from heredity stratigraphy data, future work should also assess trade-offs in configuring hstrat annotations for phylogeny reconstructions incorporating fossil data (including extinct lineages) drawn from earlier time points, as was the case in this work.
+Whereas existing analysis has focused on reconstructions from genomes drawn from a shared contemporary population \citep{moreno2025testing}, it is likely that configuration adjustments may be necessary for scenarios involving genomes of widely varying generational depths.
+Promisingly, in preliminary testing, we have found indications that incorporating fossil data into reconstructions can help improve inference accuracy of relationships among extant population members.
+
+Other future work will involve experiments putting the high-throughput phylogeny reconstruction capabilities developed into practice.
+In ongoing work, we are interested in using large-scale digital evolution experiments to test phylostatistical methodologies for detecting signatures of multilevel selection associated with major transitions in evolution \citep{BonettiFranceschi2024}, as well as pursuing hypothesis-driven experiments investigating mechanisms of open-ended evolution.
+To this end, all tools described herein are published as modular open source library components, supporting the broader research community in exploring and extending this line of inquiry.
+
+\section{Conclusion} \label{sec:conclusion}
+
+In this work, we have applied empirical annotate-and-reconstruct experiments to benchmark inference quality of hereditary stratigraphy approaches across use cases varying in phylogenetic structure, scale, and allocated annotation space.
+In these experiments, we consider,
+\begin{itemize}
+\item \textbf{differentia retention:} whether annotation space should be allocated for finer resolution in discerning recent phylogenetic events,
+\item \textbf{annotation implementation:} comparing existing column-based approaches to newer surface-based approaches optimized for fixed-size annotations, and
+\item \textbf{differentia width:} how many bits should be used per lineage checkpoint to reduce the probability of spuriously overestimating relatedness.
+\end{itemize}
+
+Findings are then applied to develop practitioner-oriented guidelines to effectively employ hereditary stratigraphy methodology.
+Principal results are,
+\begin{enumerate}
+\item tilted retention produces better reconstruction quality than steady retention, except in scenarios with very high phylogenetic richness (e.g., drift conditions);
+\item hybrid tilted-steady retention provides good reconstruction quality across scenarios;
+\item for tilted retention, surface-based implementation provides better reconstruction quality than column-based implementation;
+\item for steady retention, column-based implementation provides better reconstruction quality than surface-based implementation; and
+\item increased differentia size increases accuracy but reduces precision.
+\end{enumerate}
+As tilted policy is likely to be preferred in practice, it is promising to see surface-based implementation improve reconstruction quality in this case.
+Because surface-based approaches were designed foremost to optimize performance and be easier to code for new platforms (particularly in low-level environments) \citep{moreno2024trackable}, additionally achieving enhanced reconstruction quality makes their adoption a win-win situation.
+
+Owing to its inspiration from inference-based phylogenetics work in biology, hereditary stratigraphy is designed to operate in an entirely decentralized manner that is, by nature, efficient to scale and robust to disruptions or data loss.
+It is therefore promising to see that reconstruction accuracy of hereditary stratigraphy is also generally robust to scale-up.
+On the other hand, we found inner node loss --- a precision measure --- to be sensitive to increases in the number of taxa sampled for reconstruction.
+This issue, with bit-width differentiae, arises due to increased probability for exactly identical annotations through differentia collision, resulting in clumping of tip nodes into polytomies.
+This problem may be abated in systems with nonsynchronous generations, where tips are spread apart by generational depth.
+That said, we did find inner node loss to be largely robust to scale-up of the actual population size of a simulation, with the number of taxa sampled for reconstruction held constant.
+
+Our goal in developing hereditary stratigraphy is to provide methodology that is sufficiently lightweight, modular, and flexible for general-purpose use across digital evolution systems.
+Here, we have provided a comprehensive, evidence-driven foundation for effective application of hereditary stratigraphy across experimental use cases.
+Explicitly compiling this material as a prescriptive guide maximizes its utility to this end.
+However, we anticipate that --- most of all --- adoption hinges on success in providing a seamless, plug-and-play developer experience to those wishing to incorporate the methodology.
+As such, we seek to provide packaged library software with easy-to-learn API design and thorough documentation.
+Note that, beyond content presented here, the \textit{hstrat} repository includes a small library of code samples demonstrating end-to-end use of hereditary stratigraphy, useful as a starting point for new users \citep{moreno2022hstrat}.
+We would be very interested in collaborating to integrate hereditary stratigraphy instrumentation into your system or to develop algorithm implementations for your particular programming language and runtime environment.
+
+Present work motivates several further steps in developing hereditary stratigraphy methodology.
+From a practical perspective, we wish to make improvements in curating public-facing surface-based implementations that are interoperable with existing column-based tools.
+Another practical consideration will be optimization, and perhaps parallelization, of reconstruction to support work with very large taxon sets.
+In a separate vein, accuracy loss from differentia collisions when working with bit-level differentia may warrant effort in developing means to sample among possible collision sets and generate a consensus tree with accompanying uncertainty measures \citep{bryant2003classification}.
+
+Considering a broader perspective on future work, development of hereditary stratigraphy comprises only one aspect of a broader agenda in scaling up digital evolution experiments.
+% These methods are only one part of working with larger, less-directly observable sytstems.
+Among other avenues, research will need to explore simulation synchronization schemes \citep{fujimoto1990parallel}, best-effort computing approaches \citep{moreno2022best,ackley2020best}, emerging hardware architectures \citep{moreno2024trackable,chan2018lenia,heinemann2008artificial}, and scalable assays for evolutionary innovation, ecological dynamics, and various forms of complexity \citep{bedau1998classification,dolson2019modes,moreno2024methods,moreno2024case,moreno2024ecology}.
