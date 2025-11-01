@@ -2,7 +2,7 @@
 
 In recent years, substantial investments in high-performance computing (HPC) hardware development have been shaped around large-scale AI/ML workloads.
 Indeed, GPU accelerators have advanced rapidly as a \textit{de facto} backbone for high-throughput floating point operations \citep{unat2024landscape}.
-Key steps, though, are also being made by a growing roster of alternate emerging AI/ML accelerator hardware platforms --- such as Graphcore IPU, SambaNova RDU, and TensTorrent Tensix \citep{jia2019dissecting}.
+Key steps, though, are also being made by a growing roster of alternate emerging AI/ML accelerator hardware platforms --- such as Graphcore IPU, SambaNova RDU, and TensTorrent Tensix \citep{jia2019dissecting,lauterbach2021path,lie2022cerebras,zhang2016cambricon,emani2021accelerating,jia2019dissecting,medina2020habana}.
 
 Although highly diverse, these emerging platforms generally align along two key themes: sharded memory spaces and dynamic dataflow-driven computation.
 While these traits facilitate large processor counts with high parallel efficiency, they also impose challenges for effective utilization.
@@ -13,6 +13,7 @@ Finally, bottlenecks can arise in host-device bandwidth and latency, as typical 
 The Cerebras Wafer-Scale Engine (WSE) illustrates an extreme example of this trend.
 The architecture packages a remarkable 900,000 independent processing elements (PEs) per die, allowing recent data center installations to reach net capacity up to 44 exaflops \citep{lauterbach2021path,Feldman2025CerebrasOKC}.
 On the other hand, programming challenges are also formidable.
+This architecture interfaces processing elements (PEs) in a physical lattice, with PEs executing independently with private on-chip memory and interacting locally through a network-like interface.
 Each PE provisions a mere 48kb of memory, on-chip communication requires many-hop routing across a dense mesh of local grid connections, direct host-device communication is restricted to the small subset of PEs along the chip's periphery, and floating point operations support only half precision.
 
 Tailored within AI/ML accelerator constraints, however, general-purpose HPC applications have produced transformative speedups \citep{TODO} --- in recent years, notably including several Gordon Bell finalists \citep{TODO}.
@@ -20,61 +21,154 @@ Tailored within AI/ML accelerator constraints, however, general-purpose HPC appl
 As such, contributions bridging novel workloads to these devices are of high potential impact.
 Furthermore, developed strategies may pertain to broader classes of unconventional computing substrates that are similarly resource-constrained and highly-distributed --- such as TODO and TODO \citep{TODO}.
 
-In this paper, we focus on the problem of collecting ancestry tree history of branching processes a hardware-accelerator distributed approach to from hardware accelerator simulations.
+In present work, we focus on the problem of efficiently recording ancestry trees across massively distributed agent-based evolution simulations.
+Below, we briefly describe the nature and application of phylogeny data (i.e., ancestry trees) in evolutionary studies.
+While the primary focus of our work is in evolution, analogous branching processes arise a diverse set of domains --- such as epidemiology, where pathogen transmission trees have become a key tool in inferring underlying transmission and infection dynamics \citep{giardina2017inference,voznica2022deep,wang2020role,colijn2014phylogenetic}.
+In chemistry and nuclear physics, also, chain reactions (e.g., combustion, fission) unfold via branching processes \citep{UsonFornies1999,Pazsit2007} --- as does the partitioning and subpartitioning of matter in formation of astronomical entities \citep{Jofr2017}.
 
-\subsection{Roles of Ancestry Trees}
+\subsection{Phylogeny and Digital Evolution}
 
-Understanding the structure of branching processes, arising in phylogeny data (i.e., ancestry trees) in particular, has arisen as a cornerstone of modern evolutionary biology \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lewinsohnStatedependentEvolutionaryModels2023a,lenski2003evolutionary}.
-However, branching processes play key roles in a number of domains outside evolutionary studies.
-For instance, pathogen transmission trees have become a core part of epidemiological informatics to infer transmission dynamics \citep{TODO}.
-phylogenetic structure of pathogens has been used to characterize infection and transmission dynamics within the host population \citep{giardina2017inference,voznica2022deep}.
-Important branching processes also arise in chain reactions in chemistry and nuclear physics \citep{UsonFornies1999,Pazsit2007}.
-Phylogenetic history of branching processes has also been applied in astronomical stidies of galaxy history \citep{Jofr2017}.
+Analyzing the structure of branching processes arising in phylogenies (i.e., evolutionary ancestry relationships) has arisen as a cornerstone of modern evolutionary biology \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lenski2003evolutionary}.
+% Phylogenetic analysis is integral to much of evolution research, whether conducted \textit{in vivo} or \textit{in silico} \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lewinsohnStatedependentEvolutionaryModels2023a,lenski2003evolutionary}.
+In addition to tracing the history of notable evolutionary events such as extinctions or evolutionary innovations, phylogenetic analysis has proven critical in characterizing more general questions about the underlying mode and tempo of evolution \citep{moreno2023toward,hernandez2022can,shahbandegan2022untangling,lewinsohnStatedependentEvolutionaryModels2023a,TODO}.
+Phylogeny data has also been leveraged in guiding proactive efforts to manage or steer evolving populations.
+Most visibly, such scenarios arise in clinical and public health fields (e.g., therapy-resistant tumors, antibiotic resistance, infectious disease, etc.) \citep{TODO}.
+For application-oriented evolutionary computation, phylogenetic information can even be used to guide evolution toward desired outcomes \citep{lalejini2024phylogeny,lalejini2024runtime,murphy2008simple,burke2003increased}.
+
+Phylogenetic analyses provide key means to characterize and quantify a broad array of evolutionary processes.
+Classically, these analyses have been applied to investigation of species-level macroevolutionary dynamics revolving around speciation and extinction rates; however, population- and organism-level dynamics can also be inferred, such as the spread of beneficial mutations within a population or fitness parameters like growth rate and probability of survival \citep{genthon2023cell, levy2015quantitative, stadler2013recovering}.
+Phylogenetic analysis is also crucial in the field of epidemiology, playing a key role in informing public health interventions.
+In this context, phylogenetic methods can be used to determine transmission history, pinpointing where and how chains of infection unfold \citep{wang2020role}.
+In this vein, phylogenies are also key in assessing the prevalence of  ``super-spreader'' dynamics wherein disease spread is driven by a small set of high-risk individuals \citep{colijn2014phylogenetic}.
+
+
+Indeed, given the difficulty of observing evolution, although it has been performed in laboratory settings, digital simulations have emerged as an important component of evolutionary studies.
+However, artificial life and evolutionary computation
 Biological simulations are one sort of simulation that could move over to these platforms, because these systems are typically studied through partial observation and are highly robust to e.g., lower precision computations (32-bit) due to their underlying stochastic nature.
+In these domains, computational scale has arisen as a key limitation, particularly with respect to open-ended evolution \citep{TODO}.
+In some cases, aspects of biological evolution can be difficult or infeasible to observe on human timescales; laboratory experiments may take years, or even decades, to complete \citep{wiser2013long,Stroud2025}.
+By simulating the behavior of a population, some experiments can instead be conducted digitally --- often completing in a fraction of the time.
+Digital experiments can model key characteristics of biological populations, such as variation, natural selection, ecological interactions, spatial distribution, and more \citep{dolson2021digital,haller2023slim}.
+As such, conclusions from digital evolution experiments can contribute meaningfully to understanding biology \citep{pennock2007models}.
+
+Digital evolution approaches can also serve as a testbed to assess bioinformatics methodologies.
+The Aevol\_4b system, for instance, uses a genetic system corresponding to that of DNA, allowing any genetic information to be processed using methods directly from bioinformatics \citep{daudey2024aevol}.
+Likewise, population genetics work often incorporates SLiM, which supports sophisticated continuous-space modeling of single- and multi-species systems \citep{haller2023slim}.
+
+Crucially, however, the scale of population size can greatly impact subjects of artificial life research, like transitions in individuality, ecological dynamics, and rare evolutionary innovations \citep{taylor2016open,dolson2021digital,taylor2019evolutionary}.
+Cross-scale dynamics are also crucial to many key real-world challenges.
+For example, in evolutionary epidemiology, interactions between within-host infection dynamics and population-level epidemiological patterns determine the evolutionary trajectory of the population \citep{schreiber2021cross}.
+However, because capabilities of current silicon-based processors are not expected to improve markedly in the foreseeable future \citep{sutter2005free}, the scale-up necessary to progress on these key frontiers will demand many-processor computation.
+Application of parallel and distributed computation, however, imposes compromises to the convenience, flexibility, observability, interpretability, total reliability, and perfect replicability enjoyed under classical centralized, serial models of computation.
+Encouragingly, these challenges are already implicit to much of biology; the productivity of research involving natural organisms evidences that they are surmountable and even hints at strategies that can be used to solve them.
+Here, we explore alignment of digital evolution to HPC accelerator hardware at the extreme cutting edge of massively distributed computation, and use techniques inspired by those applied to natural organisms to mitigate limitations of distributed computation with respect to tracking phylogenies.
+
+\subsection{Progress Toward Scale-up in Artificial Life}
+
+Achieving highly scalable artificial life and digital evolution systems involves two distinct engineering considerations.
+First, as with any high-performance scientific computing, careful design is required to appropriately divvy computation and communication workloads across available hardware.
+Second, given the exceptionally discretionary nature of artificial life modeling, we can intentionally tailor simulation semantics to suit underlying hardware capabilities.
+Ackley's ongoing work with the T2 Tile Project and ULAM exemplifies a strong synthesis of this engineering duality \citep{ackley2016ulam}.
+At the level of simulation semantics, Ackley formulates update procedures in terms of local interactions between discrete, spatially situated particles.
+This design provides for efficient one-to-one mapping between simulation space and hardware components, minimizing requirements for intra-hardware connectivity and preventing global impacts from on-the-fly augmentations or reductions of available hardware.
+The ULAM framework then ties into implementation-level infrastructure necessary to accomplish performant, best-effort lock/release of spatial event windows spanning bordering hardware units \citep{ackley2013movable}.
+% The Santa Fe Board project provided analogous infrastructure foundations for earlier work, coordinating efficient packet-framed, non-blocking communication between hardware tile elements \citep{livingcomputationSFBSanta}.
+Ackley's work is distinguished, in fact, in dipping to a yet-lower level of abstraction and tackling design of bespoke, modular distributed processing hardware \citep{ackley2011homeostatic,ackley2023robust,livingcomputationSFBSanta}.
+
+Several additional digital evolution projects have made notable headway in synthesizing artificial life models with sophisticated, scalable technical backing, achieving rich interactions among numerous parallelized simulation components.
+Harding demonstrated large-scale cellular automata-based artificial development systems, achieved through GPU-parallelized instantiations of a genetic program  \citep{harding2007fast_ieee}.
+Early work by Ray with Network Tierra used an island model to distribute digital organisms across federated servers, with migration handled according to the real-time latencies and topology of the underlying network \citep{ray1995proposal}.
+More recently, Heinemann's continuation of the ALIEN project has leveraged GPU acceleration to achieve spectacularly elaborate simulations with rich interactions between numerous spatially-situated soft body agents \citep{heinemann2008artificial}.
+Likewise, the Distributed Hierarchical Transitions in Individuality (DISHTINY) project has incorporated event-driven agent-agent interaction schemes amenable to best-effort, asynchronous interlocution \citep{moreno2022exploring,moreno2021conduit}.
+GPU-first agent-based modeling (ABM) packages like Flame GPU also tackle this problem of hardware-simulacrum matching, albeit framed at a higher level of abstraction \citep{richmond2010high}.
+Beyond ALife, broader realms of application-oriented evolutionary computation have folded in with many-processor computation, most commonly through island-model and director-worker evaluation paradigms \citep{abdelhafez2019performance,cantu2001master}.
+
+
+% Notably, evolutionary biology rich exchanges with with sister fields of  --- the latter strongly on the side of application-oriented objectives and the former straddling the divide.
+% However, even in these cases, being able to collect data is important --- as understanding underlying evolutionary dynamics is key to troubleshooting and fine-tuning methodology and parameterization \citep{TODO}.
+
 
 \subsection{Exact Tracking of Ancestry Trees}
 
-A core challenge of tracking ancestry trees is memory use.
+Given the utility of , tracking phylogenetic trees is a common practice in simulation experiments.
 Typical practice to record phylogeny, the structure of lineage relatedness over evolutionary time, is to accrete every parent-child relationship as it occurs to create a comprehensive tree data structure \citep{moreno2024algorithms} (Figure \ref{fig:tracking-vs-reconstruction-schematic:tracking}).
+However, as generations elapse, the amount of data required to maintain a full record of individuals grows proportionally ---
+A core challenge of tracking ancestry trees is memory use.
 In serial settings, a common approach is to particularly when extinct lineages are pruned away \citep{dolson2024phylotrackpy}.
 This approach produces an exact record and can be highly performant.
 
-Difficulties arise, however, in extrapolating this approach to a distributed computing context, related to communication overhead of detecting lineage extinctions and sensitivity to data loss \citep{moreno2024algorithms}.
-Even in the case were were distributed extinction tracking implemented, under conditions with substantial migration between nodes, direct tracking would encompass a substantial  memory footprint (Figure \ref{fig:msprime-memory-estimate}).
+Difficulties arise, however, in extrapolating this approach to a distributed computing context.
+Without global visibility, communication overhead to propagate back detecting lineage extinctions \citep{moreno2024algorithms}.
+Even in the case were distributed extinction tracking implemented, under conditions with substantial migration between nodes, direct tracking would encompass a substantial  memory footprint (Figure \ref{fig:msprime-memory-estimate}).
+
+
 Memory use is dynamic and implementation is complex, with communication and communication buffer overhead.
  --- a big problem due to the high splinterization of the development ecosystem on proprietary platforms.
-In very large or ambitious computing contexts, direct tracking is also susceptible to data loss --- making them incompatible for very-large workloads where hardware failure is expected and a candidate for even more ambitious scalable best-effort architectures \citep{TODOackley}.
+In very large or ambitious computing contexts, direct tracking is also highly sensitive to data loss --- making them incompatible for very-large workloads where hardware failure is expected and a candidate for even more ambitious scalable best-effort architectures \citep{TODOackley}.
 
 \subsection{Reconstruction-based Approaches}
 
-To get around these issues, we look for inspiration to work with how evolutionary biologists typically work with phylogeny data.
-As is often the case in digital evolution, natural systems provide inspiration for the core strategy applied in hereditary stratigraphy: inference-based reconstruction.
+Entirely forfeiting capability to collect phylogenetic information on account of these challenges, though, would significantly reduce the utility of simulation-based evolution experiments and reduce insight into the nuts and bolts of application-oriented evolutionary optimization.
+To circumvent challenges with communication overhead, memory intensity, implementation complexity, and sensitivity to data loss, we look for inspiration to work with how evolutionary biologists typically work with phylogeny data.
+% As is often the case in digital evolution, natural systems provide inspiration for the core strategy applied in hereditary stratigraphy: inference-based reconstruction.
 Natural history of biological life operates with no extrinsic provision for interpretable record-keeping, yet phylogenetic analysis of biological organisms has proved immensely fruitful.
 Such phylogenetic analyses are possible in biology because mutational drift encodes ancestry information in DNA genomes.
-Hereditary stratigraphy methods for decentralized work operate analogously, with ancestry information captured within agent genomes rather than through external tracking.
-Figure \ref{fig:tracking-vs-reconstruction-schematic}.
+Our proposed methods for decentralized tracking work operate analogously, with ancestry information captured within agent genomes rather than through external tracking (Figure \ref{fig:tracking-vs-reconstruction-schematic}).
 
-The idea is to bundle agent genomes with special hereditary stratigraphic annotations in a manner akin to non-coding DNA (entirely neutral with respect to agent traits and fitness) and then use these annotations to perform phylogenetic reconstruction.
+Although ancestry information can be extracted from digital genomes \citep{TODOOEE4}, this approach won't work well for small genomes, requires case-by-case specific modifications (doesn't generalize across models), and subject to bias from selection effects, and encounters challenges in reconstruction efficiency typical of work with biological genomes.
+Instead, we sought to design generic annotations that could be bundled with in a manner akin to non-coding DNA (entirely neutral with respect to agent traits and fitness) and then use these annotations to perform phylogenetic reconstruction.
+This presented the crux of the problem The crux of hereditary stratigraphy algorithms, introduced in detail further on, is organization of genetic material to maximize reconstruction quality from a minimal memory footprint \citep{moreno2022hereditary}.
 (Indeed, such methods are being explored in bioengineering scenarios where barcoding contraptions are used to allow high-resolution phylogenies to be reconstructed efficiently \citep{TODO}.)
-The crux of hereditary stratigraphy algorithms, introduced in detail further on, is organization of genetic material to maximize reconstruction quality from a minimal memory footprint \citep{moreno2022hereditary}.
 
-In the context of evolutionary computation, the existing approach to collecting phylogenetic history is emblematic of this existing complete-observability paradigm.
-Historically, most research using ABM has assumed complete observability of model state.
-Indeed, the ability to measure properties \textit{in silico} that would be impossible to observe \textit{in vitro} or \textit{in vivo} is a major benefit of scientific work using ABM.
-To advance on this front, we propose a fundamental re-frame of simulation that shifts from a paradigm of ``complete,'' deterministic observability of simulation state to instead collect data through dynamic, partial, and potentially best-effort sampling akin to approaches traditionally used to study real-world systems (e.g., ice core samples, paleontological fossils).
-The aim of this strategy is to resolve scaling bottlenecks by economizing use of interconnect bandwidth, memory, and disk storage storage and better tolerating intermittent disruption.
-Trading a controlled amount of data detail for increased scalability and hardware accelerator compatibility would be highly worthwhile.
-
-Phylogenetic analysis is integral to much of evolution research, whether conducted \textit{in vivo} or \textit{in silico} \citep{faithConservationEvaluationPhylogenetic1992, STAMATAKIS2005phylogenetics,frenchHostPhylogenyShapes2023,kim2006discovery,lewinsohnStatedependentEvolutionaryModels2023a,lenski2003evolutionary}.
-In addition to tracing the history of notable evolutionary events such as extinctions or evolutionary innovations, phylogenetic analysis can also characterize more general questions about the underlying mode and tempo of evolution \citep{moreno2023toward,hernandez2022can,shahbandegan2022untangling,lewinsohnStatedependentEvolutionaryModels2023a}.
-Notably, evolutionary biology is closely intertwined with sister fields of artificial life and evolutionry computation --- the latter strongly on the side of application-oriented objectives and the former straddling the divide.
-However, even in these cases, being able to collect data is important --- as understanding underlying evolutionary dynamics is key to troubleshooting and fine-tuning methodology and parameterization \citep{TODO}.
-For application-oriented evolutionary computation, phylogenetic information can even be used to guide evolution toward desired outcomes \citep{lalejini2024phylogeny,lalejini2024runtime,murphy2008simple,burke2003increased}.
-Entirely forfeiting capability to collect phylogenetic information on account of these challenges, though, would significantly reduce the utility of simulation-based evolution experiments and reduce insight into the nuts and bolts of application-oriented evolutionary optimization.
+We describe the rough outline of hereditary stratigraphy next.
 
 \subsection{Hereditary Stratigraphy}
 
-Recently developed ``hereditary stratigraphy'' methodology aims to bridge this gap by providing means for extracting phylogenetic information from distributed simulations that are efficient, robust, and straightforward to use \citep{moreno2022hereditary}.
+% Recently developed ``hereditary stratigraphy'' methodology aims to bridge this gap by providing means for extracting phylogenetic information from distributed simulations that are efficient, robust, and straightforward to use \citep{moreno2022hereditary}.
+
+\input{fig/hstratschematic}
+
+Under controlled conditions, such as laboratory experiments or evolution simulations, genetic material may be engineered to facilitate the accuracy and efficiency of estimating phylogenetic relatedness \citep{li2024reconstructing,ackley2023robust}.%
+\footnote{Notably, Ackley has applied barcoding approaches to track recent ancestry among emergent replicators in a distributed fabric-computing context.}
+Work developing hereditary stratigraphy (``hstrat'') methods seeks to operate analogously, providing techniques to organize genetic material in digital organisms that maximize reconstruction quality while minimizing memory footprint \citep{moreno2022hereditary}.
+Hereditary stratigraphy components can be bundled with agent genomes in a manner akin to non-coding DNA (i.e., neutral with respect to agent traits and fitness), enabling generalizability across a wide variety of agent models.
+
+Hereditary stratigraphy associates each generation along each lineage with an identifying ``fingerprint'' marker, referred to as a differentia.
+On birth, each offspring receives a new differentia value and appends it to an inherited chronological record of past values --- corresponding to earlier generations along its lineage.
+Under this scheme, mismatching differentia can be used to delimit the end of common ancestry between two organisms.
+Figure \ref{fig:hstratschematic} summarizes this approach.
+
+To save space, differentiae may be pruned away --- although, at the cost of reducing precision in inferring relatedness.
+Using fewer bits per differentia can also provide many-fold memory savings; single bits or single bytes are appropriate for most use cases.
+
+While inferring relatedness from biological sequence data can be a highly challenging and computationally-intensive problem \citep{miller2010creating},
+the structured marker data used in hereditary stratigraphy somewhat ameliorates this challenge by allowing phylogeny reconstruction to be approached as a trie-building problem of identifying common string prefixes \citep{delabriandais1959file,moreno2024analysis}.
+However, the presence of missing data due to some differentia being dropped to save memory complicates matters.
+
+In the context of trie-building, missing marker time points (possessed by only a subset of organisms) effectively act as ``wildcard'' characters in prefix matching operations.
+Therefore, placing an organism on a trie requires evaluating diverging string paths beyond the wildcard to identify further matches.
+Given the likelihood of differentia value collisions for small differentia sizes (e.g., 1 bit), identifying the best-matching path after a wildcard value can require looking ahead several consecutive markers.
+Furthermore, where consecutive wildcard values are encountered, the number of possible paths that must be explored can grow exponentially.
+
+Although previous work has investigated the quality of phylogenies constructed from hereditary stratigraphy data using trie-based approaches \citep{moreno2025testing}, the computational intensity of the naive wildcard-matching approach has limited the scale of phylogenetic reconstructions investigated and restricted experimental throughput for smaller reconstructions.
+Given the objective of hereditary stratigraphy methodology to facilitate studying very large-scale digital evolution experiments, achieving reconstruction efficiency sufficient for large-scale phyloanalysis is critical to the overall utility of the methodology in enabling observable experiments.
+
+In this work, we describe an algorithm for efficient trie reconstruction in the face of missing data, and explore its performance characteristics.
+The following section introduces our proposed ``shortcut'' algorithm for the trie building approach explored in this paper.
+We then detail methods and results for benchmark trials assessing empirical scaling behavior and performance on large-scale billion-genome workloads.
+
+Most existing artificial life work uses centralized tracking to maintain an exact, complete record of phylogenetic history comprising all parent-offspring relationships that have existed over the course of a simulation \citep{ray1992evolution,bohm2017mabe,de2012deap,garwood2019revosim,godin2019apoget,dolson2024phylotrackpy}.
+Typically, records of extinct lineages are pruned to prevent memory bloat \citep{moreno2024analysis}.
+Although direct tracking is well suited to serial simulation or centralized controller-worker schemes, runtime communication overheads and sensitivity to data loss impede scaling to highly distributed systems --- particularly those with lean memory capacity like the Cerebras WSE \citep{moreno2024analysis}.
+To overcome this limitation, we have developed reconstruction-based approaches to \textit{in silico} phylogenetic tracking \citep{moreno2022hereditary}.
+These approaches require no centralized data collection during simulation runtime; instead, they use \textit{post hoc} comparisons among end-state agent genomes to deduce approximate phylogenetic history --- akin to how DNA-based analyses describe natural history.
+Figure \ref{fig:runtime-posthoc-schematic} summarizes this reconstruction-based strategy.
+
+Although analogous work with natural biosequences is notoriously challenging and data-intensive \citep{neyman1971molecular,lemmon2013high},
+the recently-developed hereditary stratigraphy annotation architecture is explicitly designed for fast, accurate, and data-lean reconstruction.
+% Work reported here uses just 96 bits of tracking information per agent genome.
+Designed to attach on underlying replicators as a neutral annotation (akin to noncoding DNA), it is a general-purpose technique potentially applicable across diverse study domains \citep{liben2008tracing,cohen1987computer,friggeri2014rumor}.
+In a stroke of convergent thinking, \citet{ackley2023robust} reports use of ``bar code'' annotations on his self-replicators to achieve a measure of coarse-grained lineage tracing.
 
 Since it was proposed, experimental work using hereditary stratigraphy has demonstrated viability in extracting information about underlying evolutionary conditions \citep{moreno2024ecology}, even at population scales reaching millions of agents/millions of generations using the 850,000 core Cerebras Wafer-Scale Engine hardware accelerator \citep{moreno2024trackable}.
 
@@ -89,6 +183,21 @@ We synthesize results from these experiments to suggest a prescriptive system of
 Analysis covers three primary configurable aspects of hereditary stratigraphy: (1) data structure implementation, (2) temporal data retention policy, and (3) size of stochastic lineage fingerprints.
 This work, in conjunction with availability of open-source software library utilities for hereditary stratigraphy \citep{moreno2022hstrat}, is hoped to catalyze means for phylogenetic analysis across a range of large-scale digital evolution projects.
 
+In this paper, we report new software and algorithms that harness the Cerebras Wafer-Scale Engine to enable radically scaled-up agent-based evolution while retaining key aspects of observability necessary to support hypothesis-driven computational experiments.
+Implementation comprises two primary aspects:
+\begin{enumerate}
+  \item an asynchronous island-based genetic algorithm (GA) suited to the memory-scarce, highly-distributed, data-oriented WSE architecture, and
+  \item a fundamental reformulation of hereditary stratigraphy's core storage and update procedures to achieve fast, simple, resource-lean annotations compatible with unconventional, resource-constrained accelerator and embedded hardware like the WSE.
+\end{enumerate}
+
+Both are implemented in Cerebras Software Language (CSL) and validated using Cerebras' SDK hardware emulator.
+We use benchmark experiments to evaluate the runtime performance characteristics of the new hereditary stratigraphy algorithms in isolation and in the integrated context providing tracking-enabled support for the island-model GA.
+In conjunction, we report emulated and on-device trials that validate phylogenetic reconstructions and demonstrate their suitability for inference of underlying evolutionary conditions.
+
+Results from both experiments are promising.
+We find that new surface-based algorithms greatly improve runtime performance.
+Scaled-down emulator benchmarks and early on-hardware trials indicate potential for simple agent models --- with phylogenetic tracking enabled --- to achieve on the order of quadrillions of agent replication events a day at full wafer scale, with support for population sizes potentially reaching hundreds of millions.
+Further, using proposed techniques, phylogenetic analyses of simulations spanning hundreds of thousands of PEs succeed in detecting differences in adaptive dynamics between alternate simulation conditions.
 
 \subsection{introduction outline}
 
@@ -199,12 +308,6 @@ In this work, we present a novel trie-building algorithm that greatly reduces co
 
 \subsection{Applications of Phylogenetic Analysis}
 
-Phylogenetic analyses provide key means to characterize and quantify a broad array of evolutionary processes.
-Classically, these analyses have been applied to investigation of species-level macroevolutionary dynamics revolving around speciation and extinction rates; however, population- and organism-level dynamics can also be inferred, such as the spread of beneficial mutations within a population or fitness parameters like growth rate and probability of survival \citep{genthon2023cell, levy2015quantitative, stadler2013recovering}.
-Phylogenetic analysis is also crucial in the field of epidemiology, playing a key role in informing public health interventions.
-In this context, phylogenetic methods can be used to determine transmission history, pinpointing where and how chains of infection unfold \citep{wang2020role}.
-In this vein, phylogenies are also key in assessing the prevalence of  ``super-spreader'' dynamics wherein disease spread is driven by a small set of high-risk individuals \citep{colijn2014phylogenetic}.
-
 % \subsection{Reconstructing Biological Phylogenies} \label{sec:introduction:bioreconst}
 
 % In biological studies, phylogenetic reconstruction methods typically work by assessing nucleotide changes between aligned DNA sequences from sample organisms.
@@ -212,18 +315,6 @@ In this vein, phylogenies are also key in assessing the prevalence of  ``super-s
 
 \subsection{Phylogenies and Digital Evolution} \label{sec:introduction:digital}
 
-In some cases, aspects of biological evolution can be difficult or infeasible to observe on human timescales; laboratory experiments may take years, or even decades, to complete \citep{wiser2013long,Stroud2025}.
-By simulating the behavior of a population, some experiments can instead be conducted digitally --- often completing in a fraction of the time.
-Digital experiments can model key characteristics of biological populations, such as variation, natural selection, ecological interactions, spatial distribution, and more \citep{dolson2021digital,haller2023slim}.
-As such, conclusions from digital evolution experiments can contribute meaningfully to understanding biology \citep{pennock2007models}.
-
-In digital evolution contexts, phylogenies have likewise proven valuable.
-In application-oriented contexts, phylogeny-based biodiversity metrics have been shown as predictive of solution quality outcomes for evolutionary computation-based optimization \citep{hernandez2022phylogenetic}.
-Phylogeny-based methods can also be applied to characterize more general aspects of ecology, spatial structure, and selection pressure within \textit{in silico} populations \citep{moreno2023toward}.
-
-Digital evolution approaches can also serve as a testbed to assess bioinformatics methodologies.
-The Aevol\_4b system, for instance, uses a genetic system corresponding to that of DNA, allowing any genetic information to be processed using methods directly from bioinformatics \citep{daudey2024aevol}.
-Likewise, population genetics work often incorporates SLiM, which supports sophisticated continuous-space modeling of single- and multi-species systems \citep{haller2023slim}.
 
 Given the programmatic observability of digital simulations, digital evolution platforms typically incorporate direct tracking methods that record lineage ancestry as the simulation runs.
 General-purpose phylogeny-tracking libraries exist for this purpose \citep{dolson2024phylotrack}, although many platforms simply incorporate bespoke implementations into their own software \citep{ofria2004avida}.
@@ -242,36 +333,7 @@ In such contexts, reconstruction-based approaches can provide an attractive bala
 
 \subsection{Hereditary Stratigraphy} \label{sec:introduction:hstrat}
 
-\input{fig/hstratschematic}
 
-Under controlled conditions, such as laboratory experiments or evolution simulations, genetic material may be engineered to facilitate the accuracy and efficiency of estimating phylogenetic relatedness \citep{li2024reconstructing,ackley2023robust}.%
-\footnote{Notably, Ackley has applied barcoding approaches to track recent ancestry among emergent replicators in a distributed fabric-computing context.}
-Work developing hereditary stratigraphy (``hstrat'') methods seeks to operate analogously, providing techniques to organize genetic material in digital organisms that maximize reconstruction quality while minimizing memory footprint \citep{moreno2022hereditary}.
-Hereditary stratigraphy components can be bundled with agent genomes in a manner akin to non-coding DNA (i.e., neutral with respect to agent traits and fitness), enabling generalizability across a wide variety of agent models.
-
-Hereditary stratigraphy associates each generation along each lineage with an identifying ``fingerprint'' marker, referred to as a differentia.
-On birth, each offspring receives a new differentia value and appends it to an inherited chronological record of past values --- corresponding to earlier generations along its lineage.
-Under this scheme, mismatching differentia can be used to delimit the end of common ancestry between two organisms.
-Figure \ref{fig:hstratschematic} summarizes this approach.
-
-To save space, differentiae may be pruned away --- although, at the cost of reducing precision in inferring relatedness.
-Using fewer bits per differentia can also provide many-fold memory savings; single bits or single bytes are appropriate for most use cases.
-
-While inferring relatedness from biological sequence data can be a highly challenging and computationally-intensive problem \citep{miller2010creating},
-the structured marker data used in hereditary stratigraphy somewhat ameliorates this challenge by allowing phylogeny reconstruction to be approached as a trie-building problem of identifying common string prefixes \citep{delabriandais1959file,moreno2024analysis}.
-However, the presence of missing data due to some differentia being dropped to save memory complicates matters.
-
-In the context of trie-building, missing marker time points (possessed by only a subset of organisms) effectively act as ``wildcard'' characters in prefix matching operations.
-Therefore, placing an organism on a trie requires evaluating diverging string paths beyond the wildcard to identify further matches.
-Given the likelihood of differentia value collisions for small differentia sizes (e.g., 1 bit), identifying the best-matching path after a wildcard value can require looking ahead several consecutive markers.
-Furthermore, where consecutive wildcard values are encountered, the number of possible paths that must be explored can grow exponentially.
-
-Although previous work has investigated the quality of phylogenies constructed from hereditary stratigraphy data using trie-based approaches \citep{moreno2025testing}, the computational intensity of the naive wildcard-matching approach has limited the scale of phylogenetic reconstructions investigated and restricted experimental throughput for smaller reconstructions.
-Given the objective of hereditary stratigraphy methodology to facilitate studying very large-scale digital evolution experiments, achieving reconstruction efficiency sufficient for large-scale phyloanalysis is critical to the overall utility of the methodology in enabling observable experiments.
-
-In this work, we describe an algorithm for efficient trie reconstruction in the face of missing data, and explore its performance characteristics.
-The following section introduces our proposed ``shortcut'' algorithm for the trie building approach explored in this paper.
-We then detail methods and results for benchmark trials assessing empirical scaling behavior and performance on large-scale billion-genome workloads.
 
 \section{Introduction} \label{sec:introduction}
 
@@ -295,33 +357,6 @@ This pattern of dramatically faster generation times than those observed in natu
 Of course, any such comparisons should also note profound discrepancies between the genetic, phenotypic, and environmental richness of biological organisms and ALife models.
 
 % Adversely? Crucially? Conversely? Formidably? Aversely? Cumbrously?
-Crucially, however, the scale of population size can greatly impact subjects of artificial life research, like transitions in individuality, ecological dynamics, and rare evolutionary innovations \citep{taylor2016open,dolson2021digital,taylor2019evolutionary}.
-Cross-scale dynamics are also crucial to many key real-world challenges.
-For example, in evolutionary epidemiology, interactions between within-host infection dynamics and population-level epidemiological patterns determine the evolutionary trajectory of the population \citep{schreiber2021cross}.
-However, because capabilities of current silicon-based processors are not expected to improve markedly in the foreseeable future \citep{sutter2005free}, the scale-up necessary to progress on these key frontiers will demand many-processor computation.
-Application of parallel and distributed computation, however, imposes compromises to the convenience, flexibility, observability, interpretability, total reliability, and perfect replicability enjoyed under classical centralized, serial models of computation.
-Encouragingly, these challenges are already implicit to much of biology; the productivity of research involving natural organisms evidences that they are surmountable and even hints at strategies that can be used to solve them.
-Here, we explore alignment of digital evolution to HPC accelerator hardware at the extreme cutting edge of massively distributed computation, and use techniques inspired by those applied to natural organisms to mitigate limitations of distributed computation with respect to tracking phylogenies.
-
-\subsection{Progress Toward Scale-up in Artificial Life}
-
-Achieving highly scalable artificial life and digital evolution systems involves two distinct engineering considerations.
-First, as with any high-performance scientific computing, careful design is required to appropriately divvy computation and communication workloads across available hardware.
-Second, given the exceptionally discretionary nature of artificial life modeling, we can intentionally tailor simulation semantics to suit underlying hardware capabilities.
-Ackley's ongoing work with the T2 Tile Project and ULAM exemplifies a strong synthesis of this engineering duality \citep{ackley2016ulam}.
-At the level of simulation semantics, Ackley formulates update procedures in terms of local interactions between discrete, spatially situated particles.
-This design provides for efficient one-to-one mapping between simulation space and hardware components, minimizing requirements for intra-hardware connectivity and preventing global impacts from on-the-fly augmentations or reductions of available hardware.
-The ULAM framework then ties into implementation-level infrastructure necessary to accomplish performant, best-effort lock/release of spatial event windows spanning bordering hardware units \citep{ackley2013movable}.
-% The Santa Fe Board project provided analogous infrastructure foundations for earlier work, coordinating efficient packet-framed, non-blocking communication between hardware tile elements \citep{livingcomputationSFBSanta}.
-Ackley's work is distinguished, in fact, in dipping to a yet-lower level of abstraction and tackling design of bespoke, modular distributed processing hardware \citep{ackley2011homeostatic,ackley2023robust,livingcomputationSFBSanta}.
-
-Several additional digital evolution projects have made notable headway in synthesizing artificial life models with sophisticated, scalable technical backing, achieving rich interactions among numerous parallelized simulation components.
-Harding demonstrated large-scale cellular automata-based artificial development systems, achieved through GPU-parallelized instantiations of a genetic program  \citep{harding2007fast_ieee}.
-Early work by Ray with Network Tierra used an island model to distribute digital organisms across federated servers, with migration handled according to the real-time latencies and topology of the underlying network \citep{ray1995proposal}.
-More recently, Heinemann's continuation of the ALIEN project has leveraged GPU acceleration to achieve spectacularly elaborate simulations with rich interactions between numerous spatially-situated soft body agents \citep{heinemann2008artificial}.
-Likewise, the Distributed Hierarchical Transitions in Individuality (DISHTINY) project has incorporated event-driven agent-agent interaction schemes amenable to best-effort, asynchronous interlocution \citep{moreno2022exploring,moreno2021conduit}.
-GPU-first agent-based modeling (ABM) packages like Flame GPU also tackle this problem of hardware-simulacrum matching, albeit framed at a higher level of abstraction \citep{richmond2010high}.
-Beyond ALife, broader realms of application-oriented evolutionary computation have folded in with many-processor computation, most commonly through island-model and director-worker evaluation paradigms \citep{abdelhafez2019performance,cantu2001master}.
 
 \subsection{Untapped Emerging Hardware}
 
@@ -364,34 +399,3 @@ Additionally, \textit{in silico}, phylogenetic information can even serve as a m
 \subsection{Decentralized Phylogenetic Tracking}
 
 \input{fig/tracking-vs-reconstruction-schematic.tex}
-
-Most existing artificial life work uses centralized tracking to maintain an exact, complete record of phylogenetic history comprising all parent-offspring relationships that have existed over the course of a simulation \citep{ray1992evolution,bohm2017mabe,de2012deap,garwood2019revosim,godin2019apoget,dolson2024phylotrackpy}.
-Typically, records of extinct lineages are pruned to prevent memory bloat \citep{moreno2024analysis}.
-Although direct tracking is well suited to serial simulation or centralized controller-worker schemes, runtime communication overheads and sensitivity to data loss impede scaling to highly distributed systems --- particularly those with lean memory capacity like the Cerebras WSE \citep{moreno2024analysis}.
-To overcome this limitation, we have developed reconstruction-based approaches to \textit{in silico} phylogenetic tracking \citep{moreno2022hereditary}.
-These approaches require no centralized data collection during simulation runtime; instead, they use \textit{post hoc} comparisons among end-state agent genomes to deduce approximate phylogenetic history --- akin to how DNA-based analyses describe natural history.
-Figure \ref{fig:runtime-posthoc-schematic} summarizes this reconstruction-based strategy.
-
-Although analogous work with natural biosequences is notoriously challenging and data-intensive \citep{neyman1971molecular,lemmon2013high},
-the recently-developed hereditary stratigraphy annotation architecture is explicitly designed for fast, accurate, and data-lean reconstruction.
-% Work reported here uses just 96 bits of tracking information per agent genome.
-Designed to attach on underlying replicators as a neutral annotation (akin to noncoding DNA), it is a general-purpose technique potentially applicable across diverse study domains \citep{liben2008tracing,cohen1987computer,friggeri2014rumor}.
-In a stroke of convergent thinking, \citet{ackley2023robust} reports use of ``bar code'' annotations on his self-replicators to achieve a measure of coarse-grained lineage tracing.
-
-\subsection{Contributions}
-
-In this paper, we report new software and algorithms that harness the Cerebras Wafer-Scale Engine to enable radically scaled-up agent-based evolution while retaining key aspects of observability necessary to support hypothesis-driven computational experiments.
-Implementation comprises two primary aspects:
-\begin{enumerate}
-  \item an asynchronous island-based genetic algorithm (GA) suited to the memory-scarce, highly-distributed, data-oriented WSE architecture, and
-  \item a fundamental reformulation of hereditary stratigraphy's core storage and update procedures to achieve fast, simple, resource-lean annotations compatible with unconventional, resource-constrained accelerator and embedded hardware like the WSE.
-\end{enumerate}
-
-Both are implemented in Cerebras Software Language (CSL) and validated using Cerebras' SDK hardware emulator.
-We use benchmark experiments to evaluate the runtime performance characteristics of the new hereditary stratigraphy algorithms in isolation and in the integrated context providing tracking-enabled support for the island-model GA.
-In conjunction, we report emulated and on-device trials that validate phylogenetic reconstructions and demonstrate their suitability for inference of underlying evolutionary conditions.
-
-Results from both experiments are promising.
-We find that new surface-based algorithms greatly improve runtime performance.
-Scaled-down emulator benchmarks and early on-hardware trials indicate potential for simple agent models --- with phylogenetic tracking enabled --- to achieve on the order of quadrillions of agent replication events a day at full wafer scale, with support for population sizes potentially reaching hundreds of millions.
-Further, using proposed techniques, phylogenetic analyses of simulations spanning hundreds of thousands of PEs succeed in detecting differences in adaptive dynamics between alternate simulation conditions.
