@@ -46,18 +46,21 @@ While experimental approaches to the study of evolution have gained substantial 
 Digital simulations also serve as a useful testbed for bioinformatics methodologies, as ground truth conditions may be configured directly \citep{daudey2024aevol,haller2023slim}.
 
 Although serial simulation code can achieve rapid generational turnover and high replicate count, typically this is at the cost of small population sizes --- especially when working with rich agent models \citep{TODOdissertation}.
-Such limitations hinder use of agent-based simulation methods for studying phenomena that only emerge across simulation scales.
+Such limitations hinder application of agent-based simulation methods to study phenomena that emerge across simulation scales.
 For instance, in evolutionary epidemiology, interactions between within-host infection dynamics and population-level epidemiological patterns determine the evolutionary trajectory of the population \citep{schreiber2021cross}.
-Likewise, simulation scale has been highlighted in studying evolutionary transitions in individuality, evo-ecological dynamics, and rare evolutionary innovations \citep{taylor2016open,dolson2021digital,taylor2019evolutionary} --- key questions, in particular, to the topic of open-ended evolution in artificial life research \citep{TODO}.
-As a bioinformatics testbed, identifying the effects of sample size on sensitivity and accuracy . to motivate large sample sizes being a question \citep{moreno2025extending,TODO}, which can be a key first step to motivating collection of expensive real-world datasets.
+Likewise, limitations of simulation scale have been highlighted in studying evolutionary transitions in individuality, evo-ecological dynamics, and rare evolutionary innovations \citep{taylor2016open,dolson2021digital,taylor2019evolutionary} --- key questions, in particular, to the topic of open-ended evolution in artificial life research \citep{TODOackley}.
+In the bioinformatics testbed domain, limitations of scale can obscure the relationships of population size and sampling density with sensitivity and accuracy \citep{moreno2025extending,TODO}.
+% , complicating the ability to provide a rationale for investments in expensive real-world datasets.
 
-Fortunately, evolution simulations are generally well-suited to accelerator platforms.
-Given their underlying stochastic nature, they are generally robust to lower-precision computations.
-Likewise, population structure in space is helpful to dealing with the highly-distributed nature of accelerator processors.
-Finally, data collection is often robust to sampling-based approaches --- as this is typically necessary in \textit{in vivo} experiments.
-In the above examples, though, phylogeny data are crucial --- MODES \citep{dolsonMODESToolboxMeasurements2019,TODO}.
-motivating the work developed here.
-Before getting to the topic of how phylogenies might be collected large-scale parallel and distributed evolution simulations, let's first review typical direct tracking approaches to phylogeny.
+Fortunately, agent-based evolution simulations are, in broad strokes, well-suited to accelerator platforms.
+Given fundamental underlying stochasticity in evolution, these simulations are generally robust to lower-precision computations.
+Similarly, since many natural populations are spatially structured, on-chip data flow constraints can be mitigated by aligning with locality in simulation structure.
+Finally, data collection can often tolerate sampling or coarsening, much as \textit{in vivo} data collection is itself often incomplete or sampled.
+
+However, this general suitability for accelerators does not easily extend to collecting phylogeny data, which is a critical ingredient both to conducting informative large-scale evolution experiments --- as in examples highlighted above --- and to orchestrating effective accelerator-friendly evolutionary computation.
+For instance, in the context of open-ended evolution, phylogeny data has been highlighted as a core metric in measuring ongoing system change \citep{dolsonMODESToolboxMeasurements2019}.
+It is the need to provide this critical capability in large-scale systems that motivates work developed here.
+Before introducing our proposed approach, though, a review of phylogeny tracking typically used in serial simulation is first warranted.
 
 % Phylogeny data has been highlighted as important
 % By simulating the behavior of a population, some experiments can instead be conducted digitally --- often completing in a fraction of the time.
