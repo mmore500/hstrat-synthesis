@@ -14,7 +14,7 @@ The Cerebras Wafer-Scale Engine (WSE) illustrates an extreme example of this tre
 The architecture packages a remarkable 900,000 independent processing elements (PEs) per die, allowing recent data center installations to reach net capacity of up to 44 exaflops \citep{lauterbach2021path,Feldman2025CerebrasOKC}.
 On the other hand, programming challenges are also formidable.
 This architecture interfaces processing elements (PEs) in a physical lattice, with PEs executing independently with private on-chip memory and interacting locally through a network-like interface.
-Each PE provisions a mere 48kb of memory, on-chip communication requires many-hop routing across a dense mesh of local grid connections, direct host-device communication is restricted to the small subset of PEs along the chip's periphery, and floating point operations support only half precision.
+Each PE provisions a mere 48kb of memory, on-chip communication requires many-hop routing across a dense mesh of local grid connections, direct host-device communication is restricted to the small subset of PEs along the chip's periphery, and floating point operations support at most single precision.
 
 Tailored within AI/ML accelerator constraints, however, general-purpose HPC applications have achieved transformative speedups \citep{TODO} --- in recent years, notably including several Gordon Bell finalists \citep{TODO}.
 % look for cites in hstrat surface concept
@@ -42,25 +42,44 @@ For such application-oriented evolutionary computation, phylogenetic information
 % TOOD
 % Strong exchanges due to
 Indeed, longstanding and productive exchange has existed between evolution \textit{in silico} and \textit{in vivo} \textit{pennock2007models,dolson2021digital}.
-While experimental approaches to the study of evolution have gained substantial traction \citep{TODO}, simulation approaches have brought to the fore study designs infeasible to observe on human timescales or otherwise difficult to engineer \citep{wiser2013long,Stroud2025}.
+While experimental approaches to the study of evolution have gained substantial traction \citep{TODO}, simulation approaches have enabled study designs infeasible to observe on human timescales or otherwise difficult to engineer \citep{wiser2013long,Stroud2025}.
 Digital simulations also serve as a useful testbed for bioinformatics methodologies, as ground truth conditions may be configured directly \citep{daudey2024aevol,haller2023slim}.
 
-Although serial simulation code can achieve rapid generational turnover and high replicate count, typically this is at the cost of small population sizes --- especially when working with rich agent models \citep{TODOdissertation}.
+Although serial simulation code can achieve rapid generational turnover and high replicate count, generally this is at the cost of small population sizes when working with rich agent models \citep{moreno2022engineering}.
 Such limitations hinder application of agent-based simulation methods to study phenomena that emerge across simulation scales.
 For instance, in evolutionary epidemiology, interactions between within-host infection dynamics and population-level epidemiological patterns determine the evolutionary trajectory of the population \citep{schreiber2021cross}.
-Likewise, limitations of simulation scale have been highlighted in studying evolutionary transitions in individuality, evo-ecological dynamics, and rare evolutionary innovations \citep{taylor2016open,dolson2021digital,taylor2019evolutionary} --- key questions, in particular, to the topic of open-ended evolution in artificial life research \citep{TODOackley}.
-In the bioinformatics testbed domain, limitations of scale can obscure the relationships of population size and sampling density with sensitivity and accuracy \citep{moreno2025extending,TODO}.
+Likewise, limitations of simulation scale have been highlighted in studying evolutionary transitions in individuality, eco-evolutionary dynamics, and rare evolutionary innovations \citep{taylor2016open,dolson2021digital,taylor2019evolutionary} --- questions key, in particular, to the topic of open-ended evolution in artificial life research \citep{TODOackley}.
+Notably, in this domain, phylogeny data underpins core metrics for measuring ongoing system change \citep{dolsonMODESToolboxMeasurements2019}.
+In the bioinformatics testbed domain, which also makes heavy use of phylogeny data, limitations of simulation scale can obscure the relationships of population size and  sampling density with sensitivity and accuracy \citep{moreno2025extending,TODO}.
 % , complicating the ability to provide a rationale for investments in expensive real-world datasets.
 
 Fortunately, agent-based evolution simulations are, in broad strokes, well-suited to accelerator platforms.
-Given fundamental underlying stochasticity in evolution, these simulations are generally robust to lower-precision computations.
-Similarly, since many natural populations are spatially structured, on-chip data flow constraints can be mitigated by aligning with locality in simulation structure.
-Finally, data collection can often tolerate sampling or coarsening, much as \textit{in vivo} data collection is itself often incomplete or sampled.
+Given the fundamental underlying stochasticity of evolution, these simulations are generally robust to lower-precision computations.
+In some applications, this robustness can also permit flexibility in asynchronous communication patterns.
+Finally, since many natural populations are spatially structured, on-chip data flow constraints can be mitigated by aligning with hardware locality with simulation structure.
 
-However, this general suitability for accelerators does not easily extend to collecting phylogeny data, which is a critical ingredient both to conducting informative large-scale evolution experiments --- as in examples highlighted above --- and to orchestrating effective accelerator-friendly evolutionary computation.
-For instance, in the context of open-ended evolution, phylogeny data has been highlighted as a core metric in measuring ongoing system change \citep{dolsonMODESToolboxMeasurements2019}.
-It is the need to provide this critical capability in large-scale systems that motivates work developed here.
-Before introducing our proposed approach, though, a review of phylogeny tracking typically used in serial simulation is first warranted.
+% which is crucial for making experiments actually useful.
+% Key challlenges exist in data collection, memory constraints on data collection.
+% However, existing approaches to tracking phylogeny require global information.
+% Challenges exist in extending this general suitability for accelerators does not easily extend to collecting phylogeny data.
+A key unsolved challenge, however, exists in collecting the data necessary to assess simulations' evolutionary dynamics and outcomes.
+On accelerator platforms, constraints in on-device memory and overhead of host-device synchronization limit the volume of data that can feasibly be buffered and collected.
+These constraints can be formidable;
+for instance, under the WSE architecture, output data must share per-PE storage capacity for fewer than 13,000 single-precision floating point values --- also needed for machine code, working buffers, and underlying simulation state.
+
+% In the biological sciences, a wealth of statistical analyses exist on data collection can often
+Promisingly, it is the case that biological studies generally tolerate sampling and coarsening --- given that \textit{in vivo} data collection is itself typically incomplete and approximate.
+As a notable exception, though, existing approaches to recording ancestry information from digital experiments typically rely on an exhaustive record-keeping strategy.
+That is, lineage histories are stored as a sequence of census entries, with each marking its predecessor.
+As further discussed below, where lineages traverse across distributed memory spaces these ancestry records can accumulate a substantial memory footprint --- even with additional coordination mechanisms to weed out extinct lineages.
+
+Given the key role of phylogeny data for informative evolution simulations --- and effective application-oriented evolutionary computation --- the cost and complexity of exact ancestry tracking poses a major obstacle to fully harnessing next-generation AI/ML hardware accelerators.
+Here, we pursue an alternate approach inspired by how biologists typically study phylogenies in nature: by estimating relatedness via similarities among genomes of interest.
+Because work with natural biosequence data is notoriously data- and compute-intensive, our focus is in developing a structure for synthetic genome data to allow fast reconstructions from small sequences (e.g., as little as 64 bits).
+Given that requirements for inference will differ substantially by both underlying evolutionary conditions and overarching analytical/experimental objectives, we ensure that memory use may be tuned to desired inference accuracy and that emphasis in resolution power may be adjusted between recent and ancient history.
+
+Before further introducing our proposed approach, though, a review of existing phylogeny tracking typically used is first warranted.
+
 
 % Phylogeny data has been highlighted as important
 % By simulating the behavior of a population, some experiments can instead be conducted digitally --- often completing in a fraction of the time.
