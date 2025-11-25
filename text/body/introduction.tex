@@ -71,12 +71,15 @@ for instance, under the WSE architecture, output data must share per-PE storage 
 Promisingly, it is the case that biological studies generally tolerate sampling and coarsening --- given that \textit{in vivo} data collection is itself typically incomplete and approximate.
 As a notable exception, though, existing approaches to recording ancestry information from digital experiments typically rely on an exhaustive record-keeping strategy.
 That is, lineage histories are stored as a sequence of census entries, with each marking its predecessor.
-As further discussed below, where lineages traverse across distributed memory spaces these ancestry records can accumulate a substantial memory footprint --- even with additional coordination mechanisms to weed out extinct lineages.
+As further discussed below, where lineages traverse distributed memory spaces these ancestry records can accumulate a substantial memory footprint --- even after factoring in additional measures to weed out extinct lineages.
 
-Given the key role of phylogeny data for informative evolution simulations --- and effective application-oriented evolutionary computation --- the cost and complexity of exact ancestry tracking poses a major obstacle to fully harnessing next-generation AI/ML hardware accelerators.
+Given the key role of phylogeny data for informative evolution simulations --- and effective application-oriented evolutionary computation --- the cost and complexity of exact ancestry tracking poses a major obstacle to harnessing next-generation AI/ML hardware accelerators.
 Here, we pursue an alternate approach inspired by how biologists typically study phylogenies in nature: by estimating relatedness via similarities among genomes of interest.
-Because work with natural biosequence data is notoriously data- and compute-intensive, our focus is in developing a structure for synthetic genome data to allow fast reconstructions from small sequences (e.g., as little as 64 bits).
-Given that requirements for inference will differ substantially by both underlying evolutionary conditions and overarching analytical/experimental objectives, we ensure that memory use may be tuned to desired inference accuracy and that emphasis in resolution power may be adjusted between recent and ancient history.
+Because work with natural biosequence data is notoriously data- and compute-intensive, our focus is in developing a structure for synthetic genome data to allow fast reconstructions from small sequences (e.g., as little as 64 bits per genome).
+Another priority is that per-genome memory footprint may be adjusted to tune inference quality, given that resource use priorities will differ substantially between use cases.
+Finally, we also ensure that emphasis in resolution power may be adjusted between recent and ancient history.
+% as well as underlying evolutioneary conditions, and overarching analytical/experimental objectives
+% principled configurability so memory use may be tuned to provide desired inference accuracy and
 
 Before further introducing our proposed approach, though, a review of existing phylogeny tracking typically used is first warranted.
 
@@ -117,35 +120,148 @@ Before further introducing our proposed approach, though, a review of existing p
 % Notably, evolutionary biology rich exchanges with with sister fields of  --- the latter strongly on the side of application-oriented objectives and the former straddling the divide.
 % However, even in these cases, being able to collect data is important --- as understanding underlying evolutionary dynamics is key to troubleshooting and fine-tuning methodology and parameterization \citep{TODO}.
 
+\subsection{Exact Tracking of Ancestry Trees in Serial Environments}
 
-\subsection{Exact Tracking of Ancestry Trees}
+Given the broad utility of phylogeny data, tracking ancestry trees is a common practice in digital evolution experiments \citep{ray1992evolution,bohm2017mabe,de2012deap,garwood2019revosim,godin2019apoget,dolson2024phylotrackpy,haller2023slim,Guillaume2006,OFallon2010,Thornton2014,okamoto2017framework,Vlachos2018,schumaker2018hexsim,MattheyDoret2021}.
+Typical implementation records lineage histories by accreting every parent-child relationship as it occurs to maintain a comprehensive tree data structure \citep{moreno2024algorithms} (Figure \ref{fig:tracking-vs-reconstruction-schematic:tracking}).
+In most cases, however, additional steps are required to prevent excessive memory use.
+For instance, even if 64 bits are stored per ancestor, a population of 3,600 individuals will accrue 1 gigabyte of data in under 40,000 generations --- this amount growing linearly with generations elapsed.
 
-Given the utility of , tracking phylogenetic trees is a common practice in simulation experiments \citep{ray1992evolution,bohm2017mabe,de2012deap,garwood2019revosim,godin2019apoget,dolson2024phylotrackpy,haller2023slim,Guillaume2006,OFallon2010,Thornton2014,okamoto2017framework,Vlachos2018,schumaker2018hexsim,MattheyDoret2021}.
-Typical practice to record lineage histories is to accrete every parent-child relationship as it occurs to create a comprehensive tree data structure \citep{moreno2024algorithms} (Figure \ref{fig:tracking-vs-reconstruction-schematic:tracking}).
-However, as generations elapse, the amount of data required to maintain a full record of individuals grows proportionally ---
-A core challenge of tracking ancestry trees is memory use.
-In serial settings, a common approach is to particularly when extinct lineages are pruned away \citep{dolson2024phylotrackpy}.
-This approach produces an exact record and can be highly performant.
+One simple strategy to control memory use is by collecting intermediate census snapshots only at pre-defined intervals \citep{TODOcliff}.
+Notably, this approach can generalize well to distributed architectures --- as snapshot thresholds may be defined in terms of lineage generations elapsed (rather than simulation time) to avoid need for synchronization barriers.
+While this approach maintains perfect accuracy and can give good detail over macroevolutionary timescales, microevolutionary detail is lost within snapshot windows.
+% i.e., structuring snapshot windows on tilted timeframe leading up to end
+% This loss of microevolutionary detail is particularly inexorable in scenarios where simulation duration is unknown \textit{a priori} or genome samples are collected on a rolling basis, rather than just at the end.
+With respect to memory use, although each snapshot is moderately sized (i.e., reasonably two 32-bit identifiers per snapshotted population member), burden will accumulate linearly with snapshots elapsed unless streamed off device.
+Further, in the absence of barrier synchronization, the partitioning of snapshot memory load is not entirely predictable \textit{a priori}.
 
-Difficulties arise, however, in extrapolating this approach to a distributed computing context.
-Without global visibility, communication overhead to propagate back detecting lineage extinctions \citep{moreno2024algorithms}.
-Even in the case were distributed extinction tracking implemented, under conditions with substantial migration between nodes, direct tracking would encompass a substantial  memory footprint (Figure \ref{fig:msprime-memory-estimate}).
+Another obvious strategy to curtail memory use is by tracking extinctions, allowing ancestry records along lineages without extant descendants to be purged \citep{dolson2024phylotrackpy}.
+In unified memory spaces, this amounts to a straightforward reference counting exercise, as asexual lineages are acyclic in nature.
+For work necessary to detect and clean extinct lineages, complexity is amortized $\mathcal{O}(1)$ per reproduction event \citep{TODO}.
+Further, if unifurcating ancestry chains are collapsed, memory footprint can be guaranteed constant space.
+\unskip\footnote{%
+Note also the possibility of an alternate coarsening strategy wherein lineage segments sharing a particular genetic or phenotypic trait are merged --- i.e., a user-defined taxonomic unit \citep{dolson2024phylotrackpy}.
+Although most taxonomic unit coarsenings will exhibit equivalent asymptotic scaling to individual-level tracking, orders-of-magnitude memory savings may be achieved.
+}
+Otherwise, if unifurcations are not collapsed, memory use will still scale linearly with time, but at a much slower (and typically manageable) rate.
+\unskip\footnote{%
+This small scaling coefficient arises a result of coalescence: the statistical tendency for an extant population's ancestry to merge back into just a few persisting lines from the distant past \citep{TODO}.
+}
 
+If historical information involving extinct lineages is required, archived individuals may be marked as permanently extant to preserve their lineages.
+In a shared memory environment, the marginal memory cost per archived specimen can similarly be kept constant --- assuming consolidation of unifurcating ancestry chains.
 
-Memory use is dynamic and implementation is complex, with communication and communication buffer overhead.
- --- a big problem due to the high splinterization of the development ecosystem on proprietary platforms.
-In very large or ambitious computing contexts, direct tracking is also highly sensitive to data loss --- making them incompatible for very-large workloads where hardware failure is expected and a candidate for even more ambitious scalable best-effort architectures \citep{TODOackley}.
+Given these properties, in conventional CPU-based simulations reference-counted exact phylogeny tracking essentially provides a best-of-both-worlds solution with respect to efficiency and accuracy.
+That is, for direct tracking, memory and compute complexity both scale optimally with underlying population size and simulation duration.
+In practical terms, this approach especially suits environments that furnish a dynamic memory allocation engine.
+
+\subsection{Exact Tracking of Ancestry Trees in Distributed Environments}
+
+Complications arise, however, in extending the direct tracking approach to a distributed context --- where migration events may wind lineage histories across numerous memory spaces.
+Most obviously, in the absence of global visibility, additional communication protocols become necessary to propagate back lineage extinction notifications \citep{moreno2024algorithms}.
+Under conditions with substantial migration between nodes, however, the distributed representation of solely extant lineages alone can occupy a sizeable memory footprint.
+In the absence of complex point-to-point communication patterns, identifier values must be kept for each extant lineage emigrating from a memory space --- even if no descendants remain extant locally;
+this information remains necessary to ensure an intact breadcrumb trail connecting extant tips back to their founding ancestor.
+
+Although each breadcrumb may individually be small in size --- reasonably 64 bits each, including a generational timestamp --- in aggregate they may accumulate substantially.
+To illustrate, consider an island-model population distributed over the WSE processor grid, with 512 individuals resident per PE and neighboring PEs exchange individuals at a 5\% migration rate.
+With a backwards-time coalescent simulator such as msprime, we can estimate the distributed memory footprint of an exact tracking approach incorporating pruning.
+Such coalescent simulations sample possible spatio-temporal lineage histories for an extant population \citep{TODO}.
+Using a drift model over structured fixed-capacity subpopulations, we can tractably approximate the full WSE processor grid as 900 independent $30 \times 30$ subgrids.
+To account for stochastic variability in sampled lineage histories, we will consider memory footprints across 10 independent whole-chip replicates.
+
+For the above scenario, Figure \ref{fig:msprime-memory-estimate} compares projected memory footprints between exact tracking with lineage pruning versus our proposed reconstruction-based approach.
+With pruning, the upper bound memory use per PE averages 39.6kB across replicates.
+If additional coordination was employed to balance memory load for stored tracking data across PEs, use would be 25.3kB per PE.
+Another possible optimization would be periodic checkpoint synchronization with host to export accumulated data.
+Batching simulation across 100,000 generation windows in this manner would also reduce memory cost per PE to 25.3kB.
+If used together, batching and balancing would require 20.9kB per PE.
+As expected, distributed memory footprints for direct tracking above are substantially greater than the 12kB required to store timestamped unique identfiers for direct tracking in a unified memory space.
+% $2N$
+
+For context, recall that on the WSE architecture total memory capacity per PE is 48kB --- which must be shared also among other data records, underlying simulation state (e.g., population genomes), and program data.
+Note that the above memory use estimates do not account for transient stale lineage data arising from latency in extinction notifications, do not incorporate safety margins for stochastic variability in lineage histories, and assume that no fossil lineages are archived.
+Further, memory cost could increase orders of magnitude in simulations of sexual populations in order to track lineages of multiple independently-assorting genome sites per individual.
+
+A core motivation of applying hardware accelerator devices to study evolution is making detailed simulation feasible for very large population sizes.
+In practice, accelerator processing power can markedly shift constraint on population size from simulation speed to on-device memory capacity.
+Thus, in this context, controlling the memory footprint of telemetry and instrumentation is key to achieving utility.
+
+While possible, entirely foregoing phylogenetic tracking to reclaim memory would significantly reduce the utility of simulation-based evolution experiments and, in application-oriented cases, reduce visibility into the nuts and bolts of evolutionary optimization.
+Instead, it would instead be advantageous in many circumstances to trade a measured amount of accuracy and precision in phylogenetic inference for improved resource efficiency.
+It is this capability we seek to develop here, by drawing inspiration from how modern biologists typically work with phylogeny data --- as discussed next.
+
+% Failing to control the memory footprint of instrumentation can thus substantially undermine the
+
+% For small genome sizes especially (e.g., 256 bits)
+% Although the relative overhead of exact tracking depends on ,
+% To some degree,
+% In memory-constrained environments, therefore, these require substinative decreases in population size.
 
 \subsection{Reconstruction-based Approaches}
 
-Entirely forfeiting capability to collect phylogenetic information on account of these challenges, though, would significantly reduce the utility of simulation-based evolution experiments and reduce insight into the nuts and bolts of application-oriented evolutionary optimization.
-To circumvent challenges with communication overhead, memory intensity, implementation complexity, and sensitivity to data loss, we look for inspiration to work with how evolutionary biologists typically work with phylogeny data.
 % As is often the case in digital evolution, natural systems provide inspiration for the core strategy applied in hereditary stratigraphy: inference-based reconstruction.
-Natural history of biological life operates with no extrinsic provision for interpretable record-keeping, yet phylogenetic analysis of biological organisms has proved immensely fruitful.
+Natural history of biological life operates with no extrinsic provision for interpretable record-keeping, yet biologists nonetheless have brought ancestry among species --- and even within populations --- into clear focus.
 Such phylogenetic analyses are possible in biology because mutational drift encodes ancestry information in DNA genomes.
-Our proposed methods for decentralized tracking work operate analogously, with ancestry information captured within agent genomes rather than through external tracking (Figure \ref{fig:tracking-vs-reconstruction-schematic}).
+That is, the extent of common ancestry between two organisms can be estimated vis-a-vis accumulated mutational dissimilarities in their genetic material.
+Our proposed method operates analogously, with ancestry information captured within agent genomes rather than through external data structures (Figure \ref{fig:tracking-vs-reconstruction-schematic}).
 
-Although ancestry information can be extracted from digital genomes \citep{TODOOEE4}, this approach won't work well for small genomes, requires case-by-case specific modifications (doesn't generalize across models), and subject to bias from selection effects, and encounters challenges in reconstruction efficiency typical of work with biological genomes.
+Contrary to the objective of steamlining necessary on-device resource usage, though, bioinformatic inference typically relies on a substantial genome footprint to counteract the diffuse, stochastic nature of site-specific signals \citep{TODO}.
+For this reason, methods to compactly encode lineage history --- allowing robust inference from small genome segments --- constitutes a major technical aspect of our work, as discussed below.
+Under the proposed approach, genome information encoding lineage history resides in a single fixed-width bitfield, bundled alongside a generation counter.
+Memory overhead, therefore, is invariant to lineage history, and can be calculated trivially for a given population size.
+Reasonably, 32 bits of marker bitfield data could be used for coarse-resolution inference, 64 bits for moderate-resolution inference, or 256 bits for fine-resolution inference.
+\unskip\footnote{%
+Later discussion will detail empirical tests for reconstruction error at these bitfield sizes.
+}
+With 512 individuals per PE and 32-bit generation counters, total cost sums to 4kB for coarse-resolution inference, 6kB for moderate-resolution inference, and 18kb for fine-resolution inference (Figure \ref{fig:msprime-memory-estimate}).
+Compared to distributed direct tracking with pruning, coarse tracking represents between five- to almost ten-fold improvement in memory efficiency (depending on balancing/batching procedures).
+Notably, also, memory footprints for coarse- and moderate-resolution inference both weigh in below the practical floor of 12kB required for direct tracking in a global memory space.
+
+Shifting focus from memory footprint, several further contrasting trade-offs exist in collecting ancestry data via tracking- versus reconstruction-based strategies in massively-distributed simulations.
+
+For basic extinction-based pruning alone (i.e., no balancing or batching), direct tracking requires a supplementary communication layer for cleanup signals.
+Most obviously, this coordination imposes runtime and compile-time costs in resource use (e.g., routing paths, I/O queues, etc.).
+% Under the hood,
+On account of traffic fluctuations in conjunction with underlying simulation extinction events, implementation entails irregular communication patterns.
+Tangling matters of resource management, managing this dynamic volatility affects on-chip memory use patterns by prolonging stale data retention.
+In addition to direct overheads, addressing these challenges complicates kernel development, tuning, and maintenance --- a cost compounded by the proprietary, nascent software ecosystems characteristic of cutting-edge hardware platforms.
+
+For reconstruction-based tracking, by contrast, marker instrumentation travels within otherwise existing communication channels used to migrate genomes between memory spaces.
+Migration latency --- or even entirely dropped transmissions --- incur no side effects with regard to resource use and data integrity.
+Likewise, collecting intermediate population specimens at runtime (historical ``fossils'' for the end-state population) is simplified, with no data dependencies or resource use side effects elsewhere on the chip.
+In fact, fossil records can be gathered by simply streaming sampled genomes off device.
+Such streaming can operate on a best-effort basis, allowing rates to dynamically adjust to real-time workloads.
+For systems with non-uniform I/O access, such as the WSE's periphery-only host-device connectivity, data collection can even be concentrated where it is most readily accomplished --- provided downstream analyses can accomodate associated sampling biases.
+
+Sensitivity to data loss presents as a broader differentiating factor between direct tracking and reconstruction-based approaches.
+In contemporary exascale deployments, where time between node failures drops as low as hourly, hardware failure has come to the fore as a routine inevitability.
+Under these conditions, massive expense can become necessary to ensure full recoverability --- for example, rolling checkpoint snapshots reaching hundreds of petabytes in size \citep{gordonbellTODO}.
+Faced with these costs, for some use cases it may become preferable to pursue bounded resilience over exact recoverability.
+Indeed, on account of fundamental underlying dynamics driven by discrete stochastic events, in work with \textit{in silico} evolutionary processes many --- if not most --- science (e.g., simulation) and engineering (e.g., optimization) objectives may be entirely robust to perturbations introduced by occasional node loss.
+Furthermore, given the marginal feasibility --- much less, the dubious practicality --- of bit-level reproducibility at exascale  \citep{TODO}, substantive repeatability of chaotic evolutionary dynamics over long generational timescales within individual replicates may be essentially foregone.
+Encouragingly, such limitations are already tolerated in \textit{in vivo} directed and experimental evolution.
+
+For direct tracking, dropping even a single parent-child relationship bifurcates history --- leaving a splinter clade entirely untraceable to its origin.
+In a production environment, compute node failure could sever history of all lineages emigranted from that node.
+By contrast, reconstruction-based approaches allow any set of surviving genomes to be related with one another --- no matter the composition or magnitude of attrition.
+While fault tolerance of support instrumentation already carries tangible engineering implications at the bleeding edge of contemporary high-performance computing, looking further afield such fault tolerance could in fact become imperative under disruptive emerging unconventional hardware paradigms --- such as Ackley's vision for indefinite scalability via fully decentralized, best-effort infrastructure \citep{TODOackley}.
+% This structural resilience translates into a major practical benefit, allowing for ad-hoc downsampling without the otherwise prohibitive requirement of reconstructing a globally coherent history first.
+
+In distributed settings, distinction from direct tracking also arises with respect to runtime inference, on account of reconstruction-based approach's decentralized structure.
+Rather than \textit{post hoc} analysis, the runtime inference use case employs relatedness information \textit{in situ}.
+Examples include data reduction via on-the-fly calculation of summary statistics, prioritization for diversity-aware curation of genome samples, or even interventions to influence evolutionary outcomes --- for instance, lineage-based diversity maintenance \citep{TODO}.
+Under direct tracking, if two individuals descend from different immigrants to a memory space then meaningful comparison requires gathering external data dependencies.
+Under the reconstruction-based approach, by contrast, history is always entirely co-located with genomes.
+Runtime inference cost therefore boils down to the computations required to estimate common descent among genomes, to be discussed next.
+
+\subsection{Genome Barcoding and Hereditary Stratigraphy}
+
+% Design of Compact Fixed-width Genome Markers for Efficient, High-quality Inference
+
+Inference Quality and Efficiency
+
+Although ancestry information can be extracted directly from the content of digital genome models \citep{TODOOEE4}, this approach won't work well for small genomes, requires case-by-case specific modifications (doesn't generalize across models), and subject to bias from selection effects, and encounters challenges in reconstruction efficiency typical of work with biological genomes.
 Instead, we sought to design generic annotations that could be bundled with in a manner akin to non-coding DNA (entirely neutral with respect to agent traits and fitness) and then use these annotations to perform phylogenetic reconstruction.
 This presented the crux of the problem The crux of hereditary stratigraphy algorithms, introduced in detail further on, is organization of genetic material to maximize reconstruction quality from a minimal memory footprint \citep{moreno2022hereditary}.
 (Indeed, such methods are being explored in bioengineering scenarios where barcoding contraptions are used to allow high-resolution phylogenies to be reconstructed efficiently \citep{TODO}.)
@@ -159,7 +275,7 @@ We describe the rough outline of hereditary stratigraphy next.
 \input{fig/hstratschematic}
 
 Under controlled conditions, such as laboratory experiments or evolution simulations, genetic material may be engineered to facilitate the accuracy and efficiency of estimating phylogenetic relatedness \citep{li2024reconstructing,ackley2023robust}.%
-\footnote{Notably, Ackley has applied barcoding approaches to track recent ancestry among emergent replicators in a distributed fabric-computing context.}
+\unskip\footnote{Notably, Ackley has applied barcoding approaches to track recent ancestry among emergent replicators in a distributed fabric-computing context.}
 Work developing hereditary stratigraphy (``hstrat'') methods seeks to operate analogously, providing techniques to organize genetic material in digital organisms that maximize reconstruction quality while minimizing memory footprint \citep{moreno2022hereditary}.
 Hereditary stratigraphy components can be bundled with agent genomes in a manner akin to non-coding DNA (i.e., neutral with respect to agent traits and fitness), enabling generalizability across a wide variety of agent models.
 
