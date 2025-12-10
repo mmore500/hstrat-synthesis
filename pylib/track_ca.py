@@ -1,13 +1,16 @@
+from ast import Mult
+from re import A
 import types
 import typing
 
+import downstream._auxlib
+import downstream._auxlib._pack_hex
 import seaborn as sns
 from teeplot import teeplot as tp
-import dendropy as dp
 import downstream
 import hstrat
 from hstrat.phylogenetic_inference import AssignOriginTimeNodeRankTriePostprocessor
-from hstrat.dataframe import surface_build_tree, surface_unpack_reconstruct
+from hstrat.dataframe import surface_unpack_reconstruct
 from hstrat._auxiliary_lib import alifestd_as_newick_asexual
 import numpy as np
 import pandas as pd
@@ -19,141 +22,227 @@ import alifedata_phyloinformatics_convert as apc
 from matplotlib.patches import ConnectionPatch
 from matplotlib import pyplot as plt
 
-np.bool = bool    
+np.bool = bool
 
-class CATracker:
+
+class MultiTracker():
 
     def __init__(
         self,
-        H: int, W: int, R: int,
         dstream_S: int,
+        dstream_bitwidth: int,
         dstream_algo: types.ModuleType,
+        *,
+        N: int = 1,
+        backend: types.ModuleType = np
     ):
-        
-        assert dstream_S in {
-            8,
-            16,
-            32,
-            64,
-        }, "Surface size must be a power of two between 8 and 64"
-            
         self.algo = dstream_algo
         self.S = dstream_S
-        self.R = R
+        self.bitwidth = dstream_bitwidth
+        self.N = N
+        self.np = backend
+
+    def initialize(self, data: np.ndarray, R: int):
+        if data.dtype != self.np.bool_:
+            print("Warning: casting data to bool")
+            data = data.astype(self.np.bool_)
+
+        H, W = data.shape
         self.H = H 
         self.W = W
+        self.R = R
 
-        self.hst_markers = np.random.randint(
-            0, 2, size=(H, W, dstream_S), dtype=np.bool_
+        self.hst_markers = self.np.random.randint(
+            0, 2**self.bitwidth, size=(self.N, H, W, self.S), dtype=self.np.uint64
         )  # deposit random stuff everywhere first gen
 
         self.ancestor_search = [
             (i, j) for i in range(-R, R + 1) for j in range(-R, R + 1)
         ]
-        parent_idx = np.arange(0, H * W).reshape(H, W)
+        parent_idx = self.np.arange(0, H * W).reshape(H, W)
         parent_keys = []
         for x, y in self.ancestor_search:
-            arr = np.zeros((H, W), dtype=np.int64)
+            arr = self.np.zeros((H, W), dtype=self.np.int64)
             arr[*self._get_slices(-x, -y)] = parent_idx[*self._get_slices(x, y)]
             parent_keys.append(arr[None])
-        self.parents = np.concatenate(parent_keys)
+        self.parents = self.np.concatenate(parent_keys)
 
-    def initialize(self, data: np.ndarray):
         self.curr = data
         self.t = 0
         self.history = []
         return self
-
-    def step(self, data: np.ndarray, *, save: bool = False, add_random_noise: bool = False):
+    
+    def step(self, data, *, save: bool = False, add_random_noise: bool = False):
         self.t += 1
 
-        bit_to_assign = self.algo.assign_storage_site(self.S, self.t)
+        assert isinstance(data, self.np.ndarray), "data must match the backend"
+
+        if data.dtype != self.np.bool_:
+            print("Warning: casting data to bool")
+            data = data.astype(self.np.bool_)
+
         parent = self.curr
 
         ancestor_matrices = []
         for x, y in self.ancestor_search:
-            arr = np.zeros_like(data, dtype=np.int64)
+            arr = self.np.zeros_like(data, dtype=self.np.int64)
             arr[*self._get_slices(-x, -y)] = parent[*self._get_slices(x, y)]
             ancestor_matrices.append(arr[None])
-        scores = np.concatenate(ancestor_matrices).astype(np.float32)
-        if add_random_noise:
-            scores += np.random.uniform(low=0, high=0.5, size=scores.shape)  # 0.5 to ensure 0's don't beat 1's 
+        scores = self.np.concatenate(ancestor_matrices).astype(self.np.float32)[None].repeat(self.N, axis=0)
 
-        winning_scores = self.parents.transpose(1, 2, 0)[
-            np.eye(scores.shape[0], dtype=np.bool_)[scores.argmax(axis=0)]
-        ].reshape(self.H, self.W)
-        self.hst_markers[:] = self.hst_markers[winning_scores // self.W, winning_scores % self.W]
-        if bit_to_assign is not None:
-            self.hst_markers[:, :, bit_to_assign] = np.random.randint(
-                0, 2, size=(self.H, self.W), dtype=np.bool_
+        if add_random_noise:
+            if self.N == 1 and self.t == 1:  # only print this once
+                print("Warning: It does not make sense to add noise with N=1")
+            scores += self.np.random.uniform(low=0, high=0.5, size=scores.shape)  # 0.5 to ensure 0's don't beat 1's 
+
+        winning_scores = self.parents.transpose(1, 2, 0)[None].repeat(self.N, axis=0)[
+            self.np.eye(scores.shape[1], dtype=self.np.bool_)[scores.argmax(axis=1)]
+        ].reshape(self.N, self.H, self.W)
+        self.hst_markers[:] = self.hst_markers[
+            self.np.arange(self.hst_markers.shape[0]).reshape(self.hst_markers.shape[0], 1, 1),
+            winning_scores // self.W, 
+            winning_scores % self.W
+        ]
+
+        item_to_assign = self.algo.assign_storage_site(self.S, self.t)
+        if item_to_assign is not None:
+            self.hst_markers[..., item_to_assign] = self.np.random.randint(
+                0, 2**self.bitwidth, size=(self.N, self.H, self.W), dtype=self.np.uint64
             )
         if save:
             self.history.append((self.t, data.copy(), self.hst_markers.copy())) 
         self.curr = data
         return self
+    
 
-
-    def reconstruct_phylogeny(self, *, verbose=False):
+    def reconstruct_phylogenies(self, *, verbose=False):
         self.history.append((self.t, self.curr.copy(), self.hst_markers.copy()))
 
-        if verbose:
-            print("Generating extant information...")
-
-        extant_information = [
-            (t, np.argwhere(ca_state), np.packbits(hst_markers[ca_state], axis=-1, bitorder="big").view(dtype=f">u{self.S // 8}")) 
-            for t, ca_state, hst_markers in self.history
-        ]
-
-        if verbose:
-            print("Creating population...")
-
-        population = []
-        for t, positions, genomes in extant_information:
-            assert len(positions) == len(genomes)
-            for (y, x), i in zip(positions, genomes):
-                population.append(
-                    {
-                        "downstream_version": downstream.__version__,
-                        "data_hex": np.asarray(t, dtype=np.uint32)
-                        .astype(">u4")
-                        .tobytes()
-                        .hex()
-                        + i.tobytes().hex(),
-                        "dstream_algo": f"dstream.{self.algo.__name__.split('.')[-1]}",
-                        "dstream_storage_bitoffset": 32,
-                        "dstream_storage_bitwidth": self.S,
-                        "dstream_T_bitoffset": 0,
-                        "dstream_T_bitwidth": 32,
-                        "dstream_S": self.S,
-                        "extant": t == self.t,
-                        "row": y,
-                        "col": x,
-                        "state": 1
-                    }
+        results = []
+        for idx in range(self.N):
+            extant_information = [
+                (
+                    t,
+                    self.np.argwhere(ca_state),
+                    self.np.apply_along_axis(
+                        self._pack_hex,
+                        -1, hst_markers[idx, ca_state]
+                    )
                 )
+                for t, ca_state, hst_markers in self.history
+            ]
 
-        if verbose:
-            print("Reconstructing phylogeny from CA history...")
+            population = []
+            iterable = extant_information if verbose else tqdm.tqdm(extant_information)
+            for t, positions, genomes in iterable:
+                assert len(positions) == len(genomes)
+                for (y, x), i in zip(positions, genomes):
+                    population.append(
+                        {
+                            "downstream_version": downstream.__version__,
+                            "data_hex": self.np.asarray(t, dtype=self.np.uint32)
+                            .astype(">u4")
+                            .tobytes()
+                            .hex() + i,
+                            "dstream_algo": f"dstream.{self.algo.__name__.split('.')[-1]}",
+                            "dstream_storage_bitoffset": 32,
+                            "dstream_storage_bitwidth": self.S * self.bitwidth,
+                            "dstream_T_bitoffset": 0,
+                            "dstream_T_bitwidth": 32,
+                            "dstream_S": self.S,
+                            "extant": t == self.t,
+                            "row": y,
+                            "col": x,
+                            "state": 1
+                        }
+                    )
 
-        postprocessor = AssignOriginTimeNodeRankTriePostprocessor(t0="dstream_S")
-        df = surface_unpack_reconstruct(pl.from_pandas(pd.DataFrame(population))).to_pandas()
-        df["rank"] = df["hstrat_rank"]
-        df = postprocessor(df, 2**-1)
-        return df, alifestd_as_newick_asexual(df)
+            if verbose:
+                print("Reconstructing phylogeny from CA history...")
 
+            postprocessor = AssignOriginTimeNodeRankTriePostprocessor(t0="dstream_S")
+            df = surface_unpack_reconstruct(pl.from_pandas(pd.DataFrame(population))).to_pandas()
+            df["rank"] = df["hstrat_rank"]
+            df = postprocessor(df, 2**-1)
+            results.append(df)
+        return results
 
     def _get_slices(self, x, y):
         x_slice = slice(0, self.W + x) if x < 0 else slice(x, self.W)
         y_slice = slice(0, self.H + y) if y < 0 else slice(y, self.H)
         return y_slice, x_slice 
+    
+    def _pack_hex(self, items) -> str:
 
+        try:
+            items = self.np.asarray(items, dtype=self.np.int64)
+        except OverflowError:
+            items = self.np.asarray(items, dtype=self.np.uint64)
+
+        if not (1 <= self.bitwidth <= 64):
+            raise NotImplementedError(f"{self.bitwidth=} not yet supported")
+
+        if not self.bitwidth * len(items) & 3 == 0:
+            raise NotImplementedError("non-hex-aligned data not yet supported")
+
+        is_signed = self.np.any(items < 0)
+        if self.bitwidth % 8 != 0 and is_signed:
+            raise ValueError(
+                f"signed data not representable with {self.bitwidth=}",
+            )
+
+        norm_items = items + is_signed * self.np.asarray(
+            1 << (self.bitwidth - 1), dtype=self.np.uint64
+        )
+        if self.np.any(self.np.clip(norm_items, 0, (1 << self.bitwidth) - 1) != norm_items):
+            raise ValueError(f"data not representable with {self.bitwidth=}")
+
+        if self.bitwidth == 1:
+            bits = items.astype(self.np.uint8)
+            packed_bytes = self.np.packbits(bits, bitorder="big").tobytes()
+        elif self.bitwidth == 4:
+            arr = items.astype(self.np.uint8)
+            high = arr[0::2] << 4
+            low = arr[1::2]
+            packed_bytes = (high | low).astype(self.np.uint8).tobytes()
+        elif self.bitwidth & 7 == 0:
+            bytewidth = self.bitwidth >> 3
+            kind = "i" if is_signed else "u"
+            dtype = self.np.dtype(f">{kind}{bytewidth}")
+            packed_bytes = items.astype(dtype).tobytes()
+        else:
+            arr = items.astype(self.np.uint64)
+            shifts = self.np.arange(self.bitwidth - 1, -1, -1).astype(self.np.uint8)
+            bits = ((arr[:, None] >> shifts) & 1).astype(self.np.uint8)
+            packed_bytes = self.np.packbits(bits.ravel(), bitorder="big").tobytes()
+
+        return packed_bytes.hex()
+
+
+
+class CATracker(MultiTracker):
+
+    def __init__(
+        self,
+        dstream_S: int,
+        dstream_bitwidth: int,
+        dstream_algo: types.ModuleType,
+        *,
+        backend: types.ModuleType = np
+    ):
+        super().__init__(dstream_S, dstream_bitwidth, dstream_algo, N=1, backend=backend)
+
+    def reconstruct_phylogeny(self, *, verbose=False):
+        df = self.reconstruct_phylogenies(verbose=verbose)[0]
+        return df, alifestd_as_newick_asexual(df)
 
 
 # todo think about adding noise to curr (to make random ones stronger) or the scores
 def track_ca_history(
     data: np.ndarray,
-    algo: types.ModuleType,
-    S: int,
+    dstream_algo: types.ModuleType,
+    dstream_S: int,
+    dstream_bitwidth: int,
     R: int,
     *,
     fossil_range: typing.Container[int] = set(),
@@ -176,14 +265,26 @@ def track_ca_history(
     An alifestd DataFrame containing genome information (for use with
     hstrat.dataframe.surface_unpack_reconstruct).
     """
-    H, W = data.shape[1:]
+    if isinstance(data, np.ndarray):
+        backend = np 
+    else:
+        try: 
+            import cupy as cp
+            if isinstance(data, cp.ndarray):
+                backend = cp
+            else:
+                raise TypeError("data must be either a numpy or cupy ndarray")
+        except ImportError:
+            pass
+
     ca_tracker = CATracker(
-        H, W, R,
-        dstream_S=S,
-        dstream_algo=algo,
+        dstream_S=dstream_S, 
+        dstream_algo=dstream_algo, 
+        dstream_bitwidth=dstream_bitwidth,
+        backend=backend
     )
-    ca_tracker.initialize(data[0])
-    for i, curr in tqdm.tqdm(enumerate(data[1:], start=1)):
+    ca_tracker.initialize(data[0], R=R)
+    for i, curr in tqdm.tqdm(enumerate(data[1:], start=1), total=data.shape[0]-1):
         ca_tracker.step(curr, save=i in fossil_range, add_random_noise=add_random_noise)
     return ca_tracker.reconstruct_phylogeny()
 
