@@ -27,6 +27,14 @@ np.bool = bool
 
 class MultiTracker():
 
+    _supported_S = {1, 2, 4, 8, 16, 32, 64}
+
+    def _get_int_dtype(self):
+        if self.bitwidth >= 64: return self.np.uint64
+        if self.bitwidth >= 32: return self.np.uint32
+        if self.bitwidth >= 16: return self.np.uint16
+        return self.np.uint8
+
     def __init__(
         self,
         dstream_S: int,
@@ -36,16 +44,20 @@ class MultiTracker():
         N: int = 1,
         backend: types.ModuleType = np
     ):
+        assert dstream_S in self._supported_S, f"dstream_S must be in {self._supported_S}"
         self.algo = dstream_algo
         self.S = dstream_S
         self.bitwidth = dstream_bitwidth
         self.N = N
         self.np = backend
+        self.marker_dtype = self._get_int_dtype()
 
     def initialize(self, data: np.ndarray, R: int):
         if data.dtype != self.np.bool_:
             print("Warning: casting data to bool")
             data = data.astype(self.np.bool_)
+
+        assert isinstance(data, self.np.ndarray), "data must match the backend"
 
         H, W = data.shape
         self.H = H 
@@ -53,16 +65,16 @@ class MultiTracker():
         self.R = R
 
         self.hst_markers = self.np.random.randint(
-            0, 2**self.bitwidth, size=(self.N, H, W, self.S), dtype=self.np.uint64
+            0, 2**self.bitwidth, size=(self.N, H, W, self.S), dtype=self.marker_dtype
         )  # deposit random stuff everywhere first gen
 
         self.ancestor_search = [
             (i, j) for i in range(-R, R + 1) for j in range(-R, R + 1)
         ]
-        parent_idx = self.np.arange(0, H * W).reshape(H, W)
+        parent_idx = self.np.arange(0, H * W, dtype=np.uint32).reshape(H, W)
         parent_keys = []
         for x, y in self.ancestor_search:
-            arr = self.np.zeros((H, W), dtype=self.np.int64)
+            arr = self.np.zeros((H, W), dtype=self.np.uint32)
             arr[*self._get_slices(-x, -y)] = parent_idx[*self._get_slices(x, y)]
             parent_keys.append(arr[None])
         self.parents = self.np.concatenate(parent_keys)
@@ -85,10 +97,10 @@ class MultiTracker():
 
         ancestor_matrices = []
         for x, y in self.ancestor_search:
-            arr = self.np.zeros_like(data, dtype=self.np.int64)
+            arr = self.np.zeros_like(data, dtype=self.np.uint32)
             arr[*self._get_slices(-x, -y)] = parent[*self._get_slices(x, y)]
             ancestor_matrices.append(arr[None])
-        scores = self.np.concatenate(ancestor_matrices).astype(self.np.float32)[None].repeat(self.N, axis=0)
+        scores = self.np.concatenate(ancestor_matrices)[None].repeat(self.N, axis=0)
 
         if add_random_noise:
             if self.N == 1 and self.t == 1:  # only print this once
@@ -107,14 +119,18 @@ class MultiTracker():
         item_to_assign = self.algo.assign_storage_site(self.S, self.t)
         if item_to_assign is not None:
             self.hst_markers[..., item_to_assign] = self.np.random.randint(
-                0, 2**self.bitwidth, size=(self.N, self.H, self.W), dtype=self.np.uint64
+                0, 2**self.bitwidth, size=(self.N, self.H, self.W), dtype=self.marker_dtype
             )
         if save:
             self.history.append((self.t, data.copy(), self.hst_markers.copy())) 
         self.curr = data
         return self
     
-
+    def to_numpy(self, x):
+        if not isinstance(x, np.ndarray):
+            return x.get()
+        return x
+    
     def reconstruct_phylogenies(self, *, verbose=False):
         self.history.append((self.t, self.curr.copy(), self.hst_markers.copy()))
 
@@ -123,10 +139,10 @@ class MultiTracker():
             extant_information = [
                 (
                     t,
-                    self.np.argwhere(ca_state),
-                    self.np.apply_along_axis(
+                    self.to_numpy(self.np.argwhere(ca_state)),
+                    np.apply_along_axis(
                         self._pack_hex,
-                        -1, hst_markers[idx, ca_state]
+                        -1, self.to_numpy(hst_markers[idx, ca_state])
                     )
                 )
                 for t, ca_state, hst_markers in self.history
@@ -140,10 +156,7 @@ class MultiTracker():
                     population.append(
                         {
                             "downstream_version": downstream.__version__,
-                            "data_hex": self.np.asarray(t, dtype=self.np.uint32)
-                            .astype(">u4")
-                            .tobytes()
-                            .hex() + i,
+                            "data_hex": np.asarray(t, dtype=">u4").tobytes().hex() + i,
                             "dstream_algo": f"dstream.{self.algo.__name__.split('.')[-1]}",
                             "dstream_storage_bitoffset": 32,
                             "dstream_storage_bitwidth": self.S * self.bitwidth,
@@ -156,9 +169,6 @@ class MultiTracker():
                             "state": 1
                         }
                     )
-
-            if verbose:
-                print("Reconstructing phylogeny from CA history...")
 
             postprocessor = AssignOriginTimeNodeRankTriePostprocessor(t0="dstream_S")
             df = surface_unpack_reconstruct(pl.from_pandas(pd.DataFrame(population))).to_pandas()
@@ -173,49 +183,12 @@ class MultiTracker():
         return y_slice, x_slice 
     
     def _pack_hex(self, items) -> str:
-
-        try:
-            items = self.np.asarray(items, dtype=self.np.int64)
-        except OverflowError:
-            items = self.np.asarray(items, dtype=self.np.uint64)
-
-        if not (1 <= self.bitwidth <= 64):
-            raise NotImplementedError(f"{self.bitwidth=} not yet supported")
-
-        if not self.bitwidth * len(items) & 3 == 0:
-            raise NotImplementedError("non-hex-aligned data not yet supported")
-
-        is_signed = self.np.any(items < 0)
-        if self.bitwidth % 8 != 0 and is_signed:
-            raise ValueError(
-                f"signed data not representable with {self.bitwidth=}",
-            )
-
-        norm_items = items + is_signed * self.np.asarray(
-            1 << (self.bitwidth - 1), dtype=self.np.uint64
-        )
-        if self.np.any(self.np.clip(norm_items, 0, (1 << self.bitwidth) - 1) != norm_items):
-            raise ValueError(f"data not representable with {self.bitwidth=}")
-
         if self.bitwidth == 1:
-            bits = items.astype(self.np.uint8)
-            packed_bytes = self.np.packbits(bits, bitorder="big").tobytes()
+            packed_bytes = np.packbits(items, bitorder="big").tobytes()
         elif self.bitwidth == 4:
-            arr = items.astype(self.np.uint8)
-            high = arr[0::2] << 4
-            low = arr[1::2]
-            packed_bytes = (high | low).astype(self.np.uint8).tobytes()
+            packed_bytes = ((items[0::2] << 4) | items[1::2]).tobytes()
         elif self.bitwidth & 7 == 0:
-            bytewidth = self.bitwidth >> 3
-            kind = "i" if is_signed else "u"
-            dtype = self.np.dtype(f">{kind}{bytewidth}")
-            packed_bytes = items.astype(dtype).tobytes()
-        else:
-            arr = items.astype(self.np.uint64)
-            shifts = self.np.arange(self.bitwidth - 1, -1, -1).astype(self.np.uint8)
-            bits = ((arr[:, None] >> shifts) & 1).astype(self.np.uint8)
-            packed_bytes = self.np.packbits(bits.ravel(), bitorder="big").tobytes()
-
+            packed_bytes = items.astype(f">u{self.bitwidth >> 3}").tobytes()
         return packed_bytes.hex()
 
 
