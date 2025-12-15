@@ -3,8 +3,6 @@ from re import A
 import types
 import typing
 
-import downstream._auxlib
-import downstream._auxlib._pack_hex
 import seaborn as sns
 from teeplot import teeplot as tp
 import downstream
@@ -50,6 +48,7 @@ class MultiTracker():
         self.bitwidth = dstream_bitwidth
         self.N = N
         self.np = backend
+        self.rng = self.np.random.default_rng()
         self.marker_dtype = self._get_int_dtype()
 
     def initialize(self, data: np.ndarray, R: int):
@@ -97,7 +96,7 @@ class MultiTracker():
 
         ancestor_matrices = []
         for x, y in self.ancestor_search:
-            arr = self.np.zeros_like(data, dtype=self.np.uint32)
+            arr = self.np.zeros_like(data, dtype=self.np.float16)
             arr[*self._get_slices(-x, -y)] = parent[*self._get_slices(x, y)]
             ancestor_matrices.append(arr[None])
         scores = self.np.concatenate(ancestor_matrices)[None].repeat(self.N, axis=0)
@@ -105,7 +104,7 @@ class MultiTracker():
         if add_random_noise:
             if self.N == 1 and self.t == 1:  # only print this once
                 print("Warning: It does not make sense to add noise with N=1")
-            scores += self.np.random.uniform(low=0, high=0.5, size=scores.shape)  # 0.5 to ensure 0's don't beat 1's 
+            scores += self.rng.uniform(low=0, high=0.5, size=scores.shape).astype(self.np.float16)  # 0.5 to ensure 0's don't beat 1's 
 
         winning_scores = self.parents.transpose(1, 2, 0)[None].repeat(self.N, axis=0)[
             self.np.eye(scores.shape[1], dtype=self.np.bool_)[scores.argmax(axis=1)]
@@ -149,8 +148,7 @@ class MultiTracker():
             ]
 
             population = []
-            iterable = extant_information if verbose else tqdm.tqdm(extant_information)
-            for t, positions, genomes in iterable:
+            for t, positions, genomes in extant_information:
                 assert len(positions) == len(genomes)
                 for (y, x), i in zip(positions, genomes):
                     population.append(
