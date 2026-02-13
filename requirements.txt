@@ -132,7 +132,7 @@ joblib==1.5.3
     # via
     #   hstrat
     #   scikit-learn
-joinem==0.9.3
+joinem==0.11.1
     # via
     #   downstream
     #   hstrat
@@ -307,12 +307,14 @@ platformdirs==4.7.0
     #   jupyter-core
 pluggy==1.6.0
     # via pytest
-polars==1.10.0
+polars==1.37.1
     # via
     #   -r requirements.in
     #   downstream
     #   hstrat
     #   joinem
+polars-runtime-32==1.37.1
+    # via polars
 polars-u64-idx==1.33.1
     # via hstrat
 prettytable==3.17.0
