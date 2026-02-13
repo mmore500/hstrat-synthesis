@@ -1,24 +1,24 @@
-from ast import Mult
-from re import A
 import types
 import typing
 
-import seaborn as sns
-from teeplot import teeplot as tp
+import alifedata_phyloinformatics_convert as apc
 import downstream
 import hstrat
-from hstrat.phylogenetic_inference import AssignOriginTimeNodeRankTriePostprocessor
-from hstrat.dataframe import surface_unpack_reconstruct
 from hstrat._auxiliary_lib import alifestd_as_newick_asexual
+from hstrat.dataframe import surface_unpack_reconstruct
+from hstrat.phylogenetic_inference import (
+    AssignOriginTimeNodeRankTriePostprocessor,
+)
+import iplotx as ipx
+from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap, to_hex
+from matplotlib.patches import ConnectionPatch
 import numpy as np
 import pandas as pd
 import polars as pl
+import seaborn as sns
+from teeplot import teeplot as tp
 import tqdm
-from matplotlib.colors import to_hex, ListedColormap
-import iplotx as ipx
-import alifedata_phyloinformatics_convert as apc
-from matplotlib.patches import ConnectionPatch
-from matplotlib import pyplot as plt
 
 np.bool = bool
 
