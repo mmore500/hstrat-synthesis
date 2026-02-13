@@ -2,5 +2,5 @@
 
 set -e
 
-ruff --ignore=E501,E402 $@ .
-python3 -m nbqa ruff --ignore=E501,E402 $@ .
+ruff check --ignore=E501,E402 $@ .
+python3 -m nbqa ruff check --ignore=E501,E402 $@ .
