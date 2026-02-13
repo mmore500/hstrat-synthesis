@@ -385,7 +385,7 @@ rpds-py==0.30.0
     #   referencing
 ruamel-yaml==0.19.1
     # via demes
-ruff==0.0.260
+ruff==0.15.1
     # via -r requirements.in
 safe-assert==0.5.0
     # via hstrat
