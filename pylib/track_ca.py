@@ -59,7 +59,7 @@ class MultiTracker():
         assert isinstance(data, self.np.ndarray), "data must match the backend"
 
         H, W = data.shape
-        self.H = H 
+        self.H = H
         self.W = W
         self.R = R
 
@@ -82,7 +82,7 @@ class MultiTracker():
         self.t = 0
         self.history = []
         return self
-    
+
     def step(self, data, *, save: bool = False, add_random_noise: bool = False):
         self.t += 1
 
@@ -104,14 +104,14 @@ class MultiTracker():
         if add_random_noise:
             if self.N == 1 and self.t == 1:  # only print this once
                 print("Warning: It does not make sense to add noise with N=1")
-            scores += self.rng.uniform(low=0, high=0.5, size=scores.shape).astype(self.np.float16)  # 0.5 to ensure 0's don't beat 1's 
+            scores += self.rng.uniform(low=0, high=0.5, size=scores.shape).astype(self.np.float16)  # 0.5 to ensure 0's don't beat 1's
 
         winning_scores = self.parents.transpose(1, 2, 0)[None].repeat(self.N, axis=0)[
             self.np.eye(scores.shape[1], dtype=self.np.bool_)[scores.argmax(axis=1)]
         ].reshape(self.N, self.H, self.W)
         self.hst_markers[:] = self.hst_markers[
             self.np.arange(self.hst_markers.shape[0]).reshape(self.hst_markers.shape[0], 1, 1),
-            winning_scores // self.W, 
+            winning_scores // self.W,
             winning_scores % self.W
         ]
 
@@ -121,15 +121,15 @@ class MultiTracker():
                 0, 2**self.bitwidth, size=(self.N, self.H, self.W), dtype=self.marker_dtype
             )
         if save:
-            self.history.append((self.t, data.copy(), self.hst_markers.copy())) 
+            self.history.append((self.t, data.copy(), self.hst_markers.copy()))
         self.curr = data
         return self
-    
+
     def to_numpy(self, x):
         if not isinstance(x, np.ndarray):
             return x.get()
         return x
-    
+
     def reconstruct_phylogenies(self, *, verbose=False):
         self.history.append((self.t, self.curr.copy(), self.hst_markers.copy()))
 
@@ -178,8 +178,8 @@ class MultiTracker():
     def _get_slices(self, x, y):
         x_slice = slice(0, self.W + x) if x < 0 else slice(x, self.W)
         y_slice = slice(0, self.H + y) if y < 0 else slice(y, self.H)
-        return y_slice, x_slice 
-    
+        return y_slice, x_slice
+
     def _pack_hex(self, items) -> str:
         if self.bitwidth == 1:
             packed_bytes = np.packbits(items, bitorder="big").tobytes()
@@ -237,9 +237,9 @@ def track_ca_history(
     hstrat.dataframe.surface_unpack_reconstruct).
     """
     if isinstance(data, np.ndarray):
-        backend = np 
+        backend = np
     else:
-        try: 
+        try:
             import cupy as cp
             if isinstance(data, cp.ndarray):
                 backend = cp
@@ -249,8 +249,8 @@ def track_ca_history(
             pass
 
     ca_tracker = CATracker(
-        dstream_S=dstream_S, 
-        dstream_algo=dstream_algo, 
+        dstream_S=dstream_S,
+        dstream_algo=dstream_algo,
         dstream_bitwidth=dstream_bitwidth,
         backend=backend
     )
@@ -286,14 +286,14 @@ def plot_phylo_at(phylo_df: pd.DataFrame, teeplot_subdir: str, show: bool = True
         teeplot_subdir=teeplot_subdir,
         teeplot_outattrs={"rank": fossil_rank},
         teeplot_show=show
-        
+
     ) as teed:
         fig, (ax_left, ax_grid) = teed
 
         grid = np.full((grid_dim, grid_dim), np.nan)
         for _, row in df[(df["gol_state"] >= 0) & df["extant"]].iterrows():
             grid[int(row["row"]), int(row["col"])] = 0
-            
+
         cmap = sns.color_palette("Dark2", 1)
 
         tree_left = ipx.plotting.tree(
@@ -365,7 +365,7 @@ def plot_ancestry_at(phylo_df: pd.DataFrame, parent_rank: int, teeplot_subdir: s
     # determine the most recent parent for each child
     ancestors = [
         max((
-            (parent_id, df_by_id.at[pdm.mrca(child_id, parent_id).taxon.label, "hstrat_rank"]) 
+            (parent_id, df_by_id.at[pdm.mrca(child_id, parent_id).taxon.label, "hstrat_rank"])
             for parent_id in dp_tree[0].taxon_namespace if parent_id.label in parent_taxa
         ), key=lambda x: x[1])[0].label
         for child_id in dp_tree[0].taxon_namespace if child_id.label in child_taxa
@@ -389,7 +389,7 @@ def plot_ancestry_at(phylo_df: pd.DataFrame, parent_rank: int, teeplot_subdir: s
         },
         teeplot_show=show
     ) as teed:
-        
+
         fig, ((ax_top1, ax_top2), (ax_left, ax_right)) = teed
         gs = ax_top1.get_gridspec()
         ax_top1.remove()
@@ -406,7 +406,7 @@ def plot_ancestry_at(phylo_df: pd.DataFrame, parent_rank: int, teeplot_subdir: s
         )
         ax_top.margins(x=-0.04)
         ax_top.set_xlim(ax_top.get_xlim()[0] - 10, None)
- 
+
 
         for i, (rank, ax) in enumerate([(parent_rank, ax_left), (child_rank, ax_right)]):
 
