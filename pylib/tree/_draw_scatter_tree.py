@@ -1,3 +1,4 @@
+import numbers
 import types
 import typing
 
@@ -24,6 +25,7 @@ def draw_scatter_tree(
     layout: str = "vertical",
     mutate: bool = False,
     scatter_kws: dict = types.MappingProxyType({}),
+    scatter_shuffle: typing.Union[bool, int] = False,
     tree_kws: dict = types.MappingProxyType({}),
 ) -> mpl.axes.Axes:
 
@@ -89,6 +91,15 @@ def draw_scatter_tree(
         c = "none"
     else:
         raise ValueError
+
+    if isinstance(scatter_shuffle, numbers.Integral) or scatter_shuffle:
+        random_state = (
+            int(scatter_shuffle)
+            if isinstance(scatter_shuffle, numbers.Integral)
+            and not isinstance(scatter_shuffle, bool)
+            else None
+        )
+        phylogeny_df = phylogeny_df.sample(frac=1, random_state=random_state)
 
     sns.scatterplot(
         phylogeny_df,
