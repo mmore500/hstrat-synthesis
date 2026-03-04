@@ -7,9 +7,15 @@ from . import (
     cmap,
     tree,
 )
+from ._read_parquet_with_retry import (
+    read_csv_with_retry,
+    read_parquet_with_retry,
+)
 
 __all__ = [
     "chloropleth",
     "cmap",
+    "read_csv_with_retry",
+    "read_parquet_with_retry",
     "tree",
 ]
