@@ -82,7 +82,9 @@ class MultiTracker:
         parent_keys = []
         for x, y in self.ancestor_search:
             arr = self.np.zeros((H, W), dtype=self.np.uint32)
-            arr[*self._get_slices(-x, -y)] = parent_idx[*self._get_slices(x, y)]
+            arr[*self._get_slices(-x, -y)] = parent_idx[
+                *self._get_slices(x, y)
+            ]
             parent_keys.append(arr[None])
         self.parents = self.np.concatenate(parent_keys)
 
@@ -91,7 +93,9 @@ class MultiTracker:
         self.history = []
         return self
 
-    def step(self, data, *, save: bool = False, add_random_noise: bool = False):
+    def step(
+        self, data, *, save: bool = False, add_random_noise: bool = False
+    ):
         self.t += 1
 
         assert isinstance(data, self.np.ndarray), "data must match the backend"
@@ -156,7 +160,9 @@ class MultiTracker:
         return x
 
     def reconstruct_phylogenies(self, *, verbose=False):
-        self.history.append((self.t, self.curr.copy(), self.hst_markers.copy()))
+        self.history.append(
+            (self.t, self.curr.copy(), self.hst_markers.copy())
+        )
 
         results = []
         for idx in range(self.N):
