@@ -12,7 +12,7 @@ anytree==2.13.0
     #   hstrat
 astropy==6.1.7
     # via hstrat
-astropy-iers-data==0.2026.2.9.0.50.33
+astropy-iers-data==0.2026.3.2.0.47.4
     # via astropy
 attrs==25.4.0
     # via
@@ -42,7 +42,7 @@ black==22.10.0
     # via -r requirements.in
 bleach==6.3.0
     # via nbconvert
-certifi==2026.1.4
+certifi==2026.2.25
     # via requests
 charset-normalizer==3.4.4
     # via requests
@@ -78,7 +78,7 @@ deprecated==1.2.13
     #   hstrat
 distutils-strtobool==0.1.0
     # via teeplot
-downstream==1.15.5
+downstream==1.20.0
     # via hstrat
 ete3==3.1.3
     # via alifedata-phyloinformatics-convert
@@ -89,7 +89,9 @@ execnet==2.1.2
 fastjsonschema==2.21.2
     # via nbformat
 fishersrc==0.1.15
-    # via hstrat
+    # via
+    #   hstrat
+    #   phyloframe
 fonttools==4.61.1
     # via matplotlib
 frozendict==2.4.7
@@ -137,11 +139,13 @@ jinja2==3.0.3
 joblib==1.5.3
     # via
     #   hstrat
+    #   phyloframe
     #   scikit-learn
 joinem==0.11.1
     # via
     #   downstream
     #   hstrat
+    #   phyloframe
 jsonschema==4.26.0
     # via
     #   nbformat
@@ -172,6 +176,7 @@ lazy-loader==0.4
     # via
     #   downstream
     #   hstrat
+    #   phyloframe
 lru-dict==1.4.1
     # via hstrat
 markupsafe==3.0.3
@@ -200,7 +205,8 @@ more-itertools==9.1.0
     #   -r requirements.in
     #   hstrat
     #   keyname
-mpmath==1.3.0
+    #   phyloframe
+mpmath==1.4.0
     # via hstrat
 msprime==1.3.4
     # via -r requirements.in
@@ -252,6 +258,7 @@ numpy==2.1.2
     #   pandas
     #   patsy
     #   pecking
+    #   phyloframe
     #   pyarrow
     #   pyerfa
     #   scikit-learn
@@ -266,8 +273,11 @@ opytional==0.1.0
     #   backstrip
     #   downstream
     #   hstrat
+    #   phyloframe
 ordered-set==4.1.0
-    # via hstrat
+    # via
+    #   hstrat
+    #   phyloframe
 packaging==26.0
     # via
     #   astropy
@@ -288,6 +298,7 @@ pandas==2.2.3
     #   iplotx
     #   nbmetalog
     #   pecking
+    #   phyloframe
     #   seaborn
     #   statsmodels
 pandera==0.29.0
@@ -304,11 +315,13 @@ pecking==0.2.1
     # via -r requirements.in
 pexpect==4.9.0
     # via ipython
+phyloframe==0.1.0
+    # via -r requirements.in
 pickleshare==0.7.5
     # via ipython
 pillow==12.1.1
     # via matplotlib
-platformdirs==4.9.1
+platformdirs==4.9.2
     # via
     #   black
     #   jupyter-core
@@ -320,7 +333,10 @@ polars==1.37.1
     #   downstream
     #   hstrat
     #   joinem
+    #   phyloframe
 polars-runtime-32==1.37.1
+    # via polars
+polars-runtime-64==1.37.1
     # via polars
 polars-u64-idx==1.33.1
     # via hstrat
@@ -340,6 +356,7 @@ pyarrow==16.1.0
     # via
     #   -r requirements.in
     #   hstrat
+    #   phyloframe
     #   polars
 pycodestyle==2.14.0
     # via autopep8
@@ -374,7 +391,7 @@ python-slugify==8.0.4
     # via
     #   hstrat
     #   teeplot
-pytz==2025.2
+pytz==2026.1.post1
     # via pandas
 pyyaml==6.0.3
     # via
@@ -403,7 +420,9 @@ ruff==0.15.1
 safe-assert==0.5.0
     # via hstrat
 scikit-learn==1.7.2
-    # via hstrat
+    # via
+    #   hstrat
+    #   phyloframe
 scipy==1.14.1
     # via
     #   -r requirements.in
@@ -428,10 +447,13 @@ sortedcontainers==2.4.0
     # via
     #   alifedata-phyloinformatics-convert
     #   hstrat
+    #   phyloframe
 soupsieve==2.8.3
     # via beautifulsoup4
 statsmodels==0.14.6
-    # via hstrat
+    # via
+    #   hstrat
+    #   phyloframe
 teeplot==1.4.2
     # via -r requirements.in
 text-unidecode==1.3
@@ -452,11 +474,14 @@ tornado==6.5.4
     # via
     #   ipykernel
     #   jupyter-client
+tqdist==1.0
+    # via phyloframe
 tqdm==4.64.1
     # via
     #   -r requirements.in
     #   hstrat
     #   joinem
+    #   phyloframe
 traitlets==5.14.3
     # via
     #   ipykernel
@@ -471,7 +496,7 @@ treeswift==1.1.45
     # via alifedata-phyloinformatics-convert
 tskit==1.0.1
     # via msprime
-typeguard==4.5.0
+typeguard==4.5.1
     # via pandera
 typing-extensions==4.15.0
     # via
@@ -482,6 +507,7 @@ typing-extensions==4.15.0
     #   mistune
     #   multidict
     #   pandera
+    #   phyloframe
     #   pydantic
     #   pydantic-core
     #   referencing
@@ -513,7 +539,7 @@ webencodings==0.5.1
     #   tinycss2
 wrapt==1.17.3
     # via deprecated
-yarl==1.22.0
+yarl==1.23.0
     # via alifedata-phyloinformatics-convert
 zipp==3.23.0
     # via importlib-metadata
