@@ -7,9 +7,9 @@ import iplotx as ipx
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
 from phyloframe import legacy as pfl
+import seaborn as sns
 
 
 def draw_scatter_tree(
