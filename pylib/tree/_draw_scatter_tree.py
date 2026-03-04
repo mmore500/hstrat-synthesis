@@ -7,9 +7,9 @@ import iplotx as ipx
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
 from phyloframe import legacy as pfl
+import seaborn as sns
 
 
 def draw_scatter_tree(
@@ -94,8 +94,9 @@ def draw_scatter_tree(
 
     if isinstance(scatter_shuffle, numbers.Integral) or scatter_shuffle:
         random_state = (
-            scatter_shuffle
+            int(scatter_shuffle)
             if isinstance(scatter_shuffle, numbers.Integral)
+            and not isinstance(scatter_shuffle, bool)
             else None
         )
         phylogeny_df = phylogeny_df.sample(frac=1, random_state=random_state)
