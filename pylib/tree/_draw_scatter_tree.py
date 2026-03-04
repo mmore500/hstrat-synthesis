@@ -94,7 +94,7 @@ def draw_scatter_tree(
 
     if isinstance(scatter_shuffle, numbers.Integral) or scatter_shuffle:
         random_state = (
-            scatter_shuffle
+            int(scatter_shuffle)
             if isinstance(scatter_shuffle, numbers.Integral)
             else None
         )
