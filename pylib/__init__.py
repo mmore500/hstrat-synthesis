@@ -5,9 +5,11 @@ __version__ = "0.0.0"
 from . import (
     chloropleth,
     cmap,
+    tree,
 )
 
 __all__ = [
     "chloropleth",
     "cmap",
+    "tree",
 ]
