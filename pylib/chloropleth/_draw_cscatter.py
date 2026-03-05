@@ -51,11 +51,11 @@ def draw_cscatter(
         x=x,
         y=y,
         ax=ax,
-        color=[*it.starmap(cmap, zip(data[x] / xmax, data[y] / ymax))],
         **{
             **dict(
                 alpha=0.3,
                 clip_on=False,
+                color=[*it.starmap(cmap, zip(data[x] / xmax, data[y] / ymax))],
                 edgecolor=None,
                 legend=False,
                 linewidth=0,
