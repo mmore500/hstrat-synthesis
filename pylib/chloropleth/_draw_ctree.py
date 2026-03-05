@@ -4,6 +4,7 @@ import typing
 
 import matplotlib as mpl
 import pandas as pd
+from phyloframe import legacy as pfl
 
 from ..tree._draw_scatter_tree import draw_scatter_tree
 
@@ -17,6 +18,7 @@ def draw_ctree(
     style: typing.Optional[str] = None,
     cmap: typing.Callable,
     ax: typing.Optional[mpl.axes.Axes] = None,
+    collapse_unifurcations: bool = True,
     xmax: float = 1.0,
     ymax: float = 1.0,
     scatter_kws: dict = types.MappingProxyType({}),
@@ -25,6 +27,11 @@ def draw_ctree(
 ) -> mpl.axes.Axes:
 
     phylogeny_df = phylogeny_df.copy()
+
+    if collapse_unifurcations:
+        phylogeny_df = pfl.alifestd_collapse_unifurcations(
+            phylogeny_df, mutate=True
+        )
 
     def safe_cmap(
         x: float, y: float
@@ -46,6 +53,7 @@ def draw_ctree(
                 safe_cmap, zip(phylogeny_df[x] / xmax, phylogeny_df[y] / ymax)
             )
         ],
+        collapse_unifurcations=False,
         scatter_kws={
             "edgecolor": "none",
             **scatter_kws,
