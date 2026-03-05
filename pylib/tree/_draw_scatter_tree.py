@@ -39,7 +39,9 @@ def draw_scatter_tree(
 
     if collapse_unifurcations:
         phylogeny_df = pfl.alifestd_collapse_unifurcations(
-            phylogeny_df, mutate=True
+            phylogeny_df,
+            mutate=True,
+            drop_topological_sensitivity=True,
         )
 
     phylogeny_df = pfl.alifestd_try_add_ancestor_list_col(
