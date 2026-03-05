@@ -77,20 +77,11 @@ def draw_scatter_tree(
     if "__x__" in phylogeny_df.columns or "__y__" in phylogeny_df.columns:
         raise ValueError
 
-    phylogeny_df["__x__"] = 0.0
+    phylogeny_df["__x__"] = np.nan
     phylogeny_df.loc[taxa, "__x__"] = xs
 
-    phylogeny_df["__y__"] = 0.0
+    phylogeny_df["__y__"] = np.nan
     phylogeny_df.loc[taxa, "__y__"] = ys
-
-    if isinstance(c, str):
-        c = phylogeny_df[c].fillna("none").tolist()
-    elif c is not None:
-        c = list(c)
-    elif c is None:
-        c = "none"
-    else:
-        raise ValueError
 
     if isinstance(scatter_shuffle, numbers.Integral) or scatter_shuffle:
         random_state = (
@@ -99,7 +90,22 @@ def draw_scatter_tree(
             and not isinstance(scatter_shuffle, bool)
             else None
         )
-        phylogeny_df = phylogeny_df.sample(frac=1, random_state=random_state)
+        shuf = np.random.RandomState(random_state).permutation(
+            len(phylogeny_df),
+        )
+    else:
+        shuf = np.arange(len(phylogeny_df))
+
+    phylogeny_df = phylogeny_df.iloc[shuf]
+
+    if isinstance(c, str):
+        c = phylogeny_df[c].fillna("none").tolist()
+    elif c is not None:
+        c = np.array(c)[shuf]
+    elif c is None:
+        c = "none"
+    else:
+        raise ValueError
 
     sns.scatterplot(
         phylogeny_df,
