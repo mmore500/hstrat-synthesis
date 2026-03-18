@@ -31,9 +31,10 @@ def draw_cscatter(
         ax=ax, cmap=cmap, xmax=xmax, ymax=ymax, imshow_kws=dict(zorder=-300)
     )
     rect = mpl.patches.Rectangle(
-        (0, 0),
-        1,
-        1,
+        (-0.01, -0.01),
+        1.02,
+        1.02,
+        clip_on=False,
         transform=ax.transAxes,
         **{
             **dict(
