@@ -21,15 +21,25 @@ def draw_cscatter(
     despine: bool = True,
     major: typing.Optional[float] = None,
     minor: typing.Optional[float] = None,
+    cgrid: bool = True,
+    cgrid_kws: dict = types.MappingProxyType({}),
     rect_kws: dict = types.MappingProxyType({}),
     scatter_kws: dict = types.MappingProxyType({}),
     xmax: float = 1.0,
     ymax: float = 1.0,
 ) -> mpl.axes.Axes:
 
-    ax = draw_cgrid(
-        ax=ax, cmap=cmap, xmax=xmax, ymax=ymax, imshow_kws=dict(zorder=-300)
-    )
+    if cgrid:
+        ax = draw_cgrid(
+            ax=ax,
+            cmap=cmap,
+            xmax=xmax,
+            ymax=ymax,
+            **{
+                "imshow_kws": dict(zorder=-300),
+                **cgrid_kws,
+            },
+        )
     rect = mpl.patches.Rectangle(
         (-0.01, -0.01),
         1.02,
