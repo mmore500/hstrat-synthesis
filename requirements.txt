@@ -14,7 +14,7 @@ astropy==7.2.0
     # via hstrat
 astropy-iers-data==0.2026.3.16.0.53.33
     # via astropy
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   demes
     #   jsonschema
@@ -76,6 +76,7 @@ deprecated==1.2.13
     #   -r requirements.in
     #   alifedata-phyloinformatics-convert
     #   hstrat
+    #   phyloframe
 distutils-strtobool==0.1.0
     # via teeplot
 downstream==1.22.0
@@ -102,7 +103,7 @@ idna==3.11
     # via
     #   requests
     #   yarl
-importlib-metadata==8.7.1
+importlib-metadata==8.8.0
     # via watermark
 iniconfig==2.3.0
     # via pytest
@@ -285,6 +286,7 @@ packaging==26.0
     #   matplotlib
     #   nbconvert
     #   pandera
+    #   phyloframe
     #   pytest
     #   statsmodels
 pandas==2.2.3
@@ -299,7 +301,7 @@ pandas==2.2.3
     #   phyloframe
     #   seaborn
     #   statsmodels
-pandera==0.30.0
+pandera==0.30.1
     # via hstrat
 pandocfilters==1.5.1
     # via nbconvert
@@ -313,7 +315,7 @@ pecking==0.2.1
     # via -r requirements.in
 pexpect==4.9.0
     # via ipython
-phyloframe==0.2.2
+phyloframe==0.6.1
     # via
     #   -r requirements.in
     #   hstrat
