@@ -209,7 +209,9 @@ class MultiTracker:
             df = surface_unpack_reconstruct(
                 pl.from_pandas(pd.DataFrame(population))
             ).to_pandas()
-            df["rank"] = df["hstrat_rank"]
+            # column was renamed between hstrat releases
+            rank = "hstrat_rank" if "hstrat_rank" in df else "dstream_rank"
+            df["rank"] = df["hstrat_rank"] = df[rank]
             df = postprocessor(df, 2**-1)
             results.append(df)
         return results
