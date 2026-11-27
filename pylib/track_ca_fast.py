@@ -290,6 +290,7 @@ class FastCATracker:
         self.time_dilation = time_dilation
         self.track = track
         self.t = 0
+        self._snapshots = []
 
         H, W = grid.shape
         assert W % 8 == 0, "grid width must be a multiple of 8"
@@ -417,13 +418,26 @@ class FastCATracker:
                 "row": rows,
                 "col": cols,
                 "state": 1,
+                "snapshot_step": self.t,
             }
         )
 
+    def snapshot(self) -> "FastCATracker":
+        """Sample genomes of all live cells, to include as fossil tips in
+        reconstruction (flagged not extant, with `snapshot_step` set)."""
+        self._snapshots.append(self.make_population_df().assign(extant=False))
+        return self
+
     def reconstruct_phylogeny(self) -> pd.DataFrame:
-        """Reconstruct phylogeny of extant cells, as by `MultiTracker`."""
+        """Reconstruct phylogeny of extant cells and any snapshots, as by
+        `MultiTracker`."""
         df = surface_unpack_reconstruct(
-            pl.from_pandas(self.make_population_df())
+            pl.from_pandas(
+                pd.concat(
+                    [*self._snapshots, self.make_population_df()],
+                    ignore_index=True,
+                )
+            )
         ).to_pandas()
         # column was renamed between hstrat releases
         rank = "hstrat_rank" if "hstrat_rank" in df else "dstream_rank"

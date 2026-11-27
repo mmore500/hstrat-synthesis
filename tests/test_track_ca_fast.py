@@ -231,3 +231,14 @@ def test_reported_deposits_match_surface(algo_name: str, time_dilation: int):
                 last_deposit[site] = t // time_dilation
     expected = list(algo.lookup_ingest_times_eager(64, tracker.num_deposits))
     assert [last_deposit[site] for site in range(64)] == expected
+
+
+def test_snapshot():
+    rule, seed_pattern = RULES["outlier"]
+    tracker = FastCATracker(rule, make_grid(seed_pattern), dstream.steady_algo)
+    num_early = tracker.step(200).snapshot().num_alive
+    df = tracker.step(100).reconstruct_phylogeny()
+    assert (df["snapshot_step"] == 200).sum() == num_early
+    assert (df["snapshot_step"] == 300).sum() == tracker.num_alive
+    assert df["extant"].sum() == tracker.num_alive
+    assert df.loc[df["extant"], "snapshot_step"].eq(300).all()
