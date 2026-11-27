@@ -80,3 +80,47 @@ def test_distant_early_tip_not_marked():
 def test_no_late_tips():
     df = make_df([0, 0, 0], early={1, 2}, late=set())
     assert find_persistent(df) == []
+
+
+def find_transient(df: pd.DataFrame) -> list:
+    res = mark_persistent_tips(
+        df, early="is_early", late="is_late", mark_transient_as="is_transient"
+    )
+    assert not (res["is_transient"] & res["is_persistent"]).any()
+    return sorted(res.loc[res["is_transient"], "label"])
+
+
+def test_transient_one_per_extinct_clade():
+    #        0
+    #      /   \
+    #     1     2
+    #    / \   / \
+    #   3   4 5   6
+    # early clade {3, 4} has no late relatives nearby; early 5 persists
+    df = make_df([0, 0, 0, 1, 1, 2, 2], early={3, 4, 5}, late={6})
+    transient = find_transient(df)
+    assert len(transient) == 1 and transient[0] in (3, 4)
+
+
+def test_transient_distant_relative():
+    #        0
+    #       / \
+    #      1   2
+    #     / \
+    #    3   4
+    #   / \
+    #  5   6
+    # early 5 persists to late 6; early 4 and early 2 each split off
+    # earlier, as separate transient lineages
+    df = make_df([0, 0, 0, 1, 1, 3, 3], early={2, 4, 5}, late={6})
+    assert find_transient(df) == [2, 4]
+
+
+def test_transient_none_when_all_persist():
+    df = make_df([0, 0, 0, 1, 1, 2, 2], early={3, 5}, late={4, 6})
+    assert find_transient(df) == []
+
+
+def test_transient_all_without_late_tips():
+    df = make_df([0, 0, 0, 1, 1], early={2, 3, 4}, late=set())
+    assert len(find_transient(df)) == 1
