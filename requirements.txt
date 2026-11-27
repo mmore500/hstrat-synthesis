@@ -39,7 +39,7 @@ bitarray==3.8.1
     #   hstrat
 bitstring==4.4.0
     # via hstrat
-black==22.10.0
+black==26.10.0
     # via -r requirements.in
 bleach==6.3.0
     # via nbconvert
@@ -304,6 +304,7 @@ ordered-set==4.1.0
 packaging==26.2
     # via
     #   astropy
+    #   black
     #   hstrat
     #   ipykernel
     #   lazy-loader
@@ -421,6 +422,8 @@ python-slugify==8.0.4
     # via
     #   hstrat
     #   teeplot
+pytokens==0.4.1
+    # via black
 pytz==2026.2
     # via pandas
 pyyaml==6.0.3
