@@ -2,7 +2,7 @@ alifedata-phyloinformatics-convert==0.19.3
 backstrip==0.2.4
 black==22.10.0
 Deprecated==1.2.13
-hstrat==1.25.0
+hstrat==1.26.2
 interval_search==0.5.2
 IPython==7.31.1
 iplotx==1.7.0

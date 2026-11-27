@@ -33,10 +33,25 @@ The speedup comes from four places, none of which alter those semantics.
   the pattern is visited.
 - The pass is compiled with numba and parallelized over rows.
 
-The only (deliberate) deviations are that randomness comes from a counter-
-based hash keyed on `(seed, t, row, col)`, so runs are reproducible, and that
-parent choice is exactly uniform (`MultiTracker` breaks rare float16 ties in
-favor of the first candidate offset).
+The deliberate deviations are as follows.
+
+- Randomness comes from a counter-based hash keyed on `(seed, t, row, col)`,
+  so runs are reproducible.
+- Parent choice is exactly uniform (`MultiTracker` breaks rare float16 ties
+  in favor of the first candidate offset).
+- Genomes report `t + 1` deposits rather than `t`, counting the initial fill
+  of site 0 along with the deposits at steps 1 through `t`. Reporting `t`
+  leads reconstruction to attribute the newest deposit to whichever older
+  stratum previously held its site. That seldom matters under steady
+  retention, which rarely deposits late in a run, but would corrupt a stratum
+  under retention policies that deposit at every step.
+
+Optionally, deposits can be made only every `time_dilation` steps, with the
+downstream algorithm advanced once per deposit rather than once per step.
+Marker inheritance still happens at every step. This spends the surface's
+fixed number of sites on a coarser clock, which stretches the reach of
+recency-weighted retention policies; reconstructed ranks are then in units of
+`time_dilation` steps.
 """
 
 import base64
@@ -247,6 +262,8 @@ class FastCATracker:
         Downstream algorithm used to pick the site of each deposit.
     seed : int
         Seed for parent choice and differentia.
+    time_dilation : int, default 1
+        Number of steps per deposit.
     track : bool, default True
         If False, only the automaton is advanced.
     """
@@ -258,6 +275,7 @@ class FastCATracker:
         dstream_algo: types.ModuleType,
         *,
         seed: int = 1,
+        time_dilation: int = 1,
         track: bool = True,
     ) -> None:
         rule = np.ascontiguousarray(rule, dtype=np.uint8)
@@ -268,6 +286,8 @@ class FastCATracker:
         self.S = _S
         self.bitwidth = 1
         self.seed = seed
+        assert time_dilation >= 1
+        self.time_dilation = time_dilation
         self.track = track
         self.t = 0
 
@@ -308,6 +328,11 @@ class FastCATracker:
         """Packed differentia of live cells; bit `63 - s` is site `s`."""
         return self._markers[self.t % 2]
 
+    @property
+    def num_deposits(self) -> int:
+        """Deposits made per cell, counting the initial fill of site 0."""
+        return self.t // self.time_dilation + 1
+
     def step(self, num_steps: int = 1) -> "FastCATracker":
         for __ in range(num_steps):
             src, dst = self.t % 2, (self.t + 1) % 2
@@ -329,7 +354,13 @@ class FastCATracker:
             ), f"pattern reached the edge of the grid at step {self.t}"
             self._dirty[dst] = (r0, r1, k0, k1)
 
-            site = self.algo.assign_storage_site(self.S, self.t)
+            site = (
+                self.algo.assign_storage_site(
+                    self.S, self.t // self.time_dilation
+                )
+                if self.t % self.time_dilation == 0
+                else None
+            )
             key = np.uint64(
                 _mix(np.uint64(_mix(np.uint64(self.seed))) ^ np.uint64(self.t))
             )
@@ -360,7 +391,8 @@ class FastCATracker:
         rows, cols = np.nonzero(cells)  # row-major, like np.argwhere
         genomes = np.empty((len(rows), 12), dtype=np.uint8)
         genomes[:, :4] = np.frombuffer(
-            np.asarray(self.t, dtype=">u4").tobytes(), dtype=np.uint8
+            np.asarray(self.num_deposits, dtype=">u4").tobytes(),
+            dtype=np.uint8,
         )
         genomes[:, 4:] = (
             self.markers[rows, cols]
