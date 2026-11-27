@@ -316,3 +316,137 @@ TSWLatexianTemp*
 *.glstex
 
 # End of https://www.toptal.com/developers/gitignore/api/latex
+
+# ==============================================================================
+# Agentic coding tooling
+# ==============================================================================
+# Philosophy: ignore *local / personal / state* files, keep *shared* config
+# (CLAUDE.md, AGENTS.md, .cursor/rules/, .github/copilot-instructions.md, etc.)
+# committed so your team and the agents share the same instructions.
+#
+# Each vendor has a commented-out "whole directory" line. Uncomment it only if
+# your team does NOT commit that tool's shared config.
+
+# --- Anthropic / Claude Code --------------------------------------------------
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/.session*
+.claude/todos/
+.claude/shell-snapshots/
+.claude/statsig/
+# .claude/                      # uncomment to ignore the entire directory
+
+# --- OpenAI Codex CLI ---------------------------------------------------------
+AGENTS.override.md
+.codex/
+# AGENTS.md is the cross-tool standard — keep it committed
+
+# --- Cursor -------------------------------------------------------------------
+.cursor/cache/
+.cursorindexingignore
+# .cursor/                      # keep .cursor/rules/ committed; uncomment to nuke
+
+# --- GitHub Copilot -----------------------------------------------------------
+# No repo-level ignore file; exclusions are configured in GitHub org settings.
+# .github/copilot-instructions.md is meant to be committed.
+
+# --- Cline / Roo Code ---------------------------------------------------------
+.cline/cache/
+.roo/cache/
+# .clinerules and .cline/rules/ are usually committed
+
+# --- Windsurf -----------------------------------------------------------------
+.windsurf/cache/
+# .windsurfrules and .windsurf/rules/ are usually committed
+
+# --- Google Gemini CLI / Code Assist ------------------------------------------
+.gemini/
+# GEMINI.md is usually committed
+# .aiexclude is committed (it's the ignore-list itself)
+
+# --- Amazon Q / Kiro ----------------------------------------------------------
+.amazonq/cache/
+.kiro/cache/
+
+# --- Continue.dev -------------------------------------------------------------
+.continue/
+
+# --- Zed assistant ------------------------------------------------------------
+.zed/
+
+# --- Aider --------------------------------------------------------------------
+.aider*
+!.aider.conf.yml
+!.aiderignore
+.aider.chat.history.md
+.aider.input.history
+.aider.llm.history
+.aider.tags.cache.v*/
+
+# --- Tabnine / Codeium / Supermaven (editor-level, occasional local state) ----
+.tabnine/
+.codeium/
+
+# --- MCP (Model Context Protocol) ---------------------------------------------
+# .mcp.json is often committed, BUT it can hold tokens/secrets — review before
+# committing. Local override below is always ignored:
+.mcp.local.json
+
+# --- Generic agent scratch / logs ---------------------------------------------
+.ai/
+.agent/
+*.agent.log
+
+# ==============================================================================
+# Secrets (agents should never index or commit these)
+# ==============================================================================
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+secrets/
+
+# ==============================================================================
+# System / OS files
+# ==============================================================================
+
+# --- macOS --------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+Icon[
+]
+
+# --- Windows ------------------------------------------------------------------
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Linux --------------------------------------------------------------------
+*~
+.directory
+.Trash-*
+.nfs*
+
+# --- Editor / IDE noise -------------------------------------------------------
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
