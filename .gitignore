@@ -30,13 +30,11 @@ coverage_include/
 .pytest_cache
 .ruff_cache/
 __pycache__/
-__marimo__/
 
 uv.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
-__marimo__/
 *.py[cod]
 *$py.class
 
