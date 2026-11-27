@@ -124,3 +124,22 @@ def test_transient_none_when_all_persist():
 def test_transient_all_without_late_tips():
     df = make_df([0, 0, 0, 1, 1], early={2, 3, 4}, late=set())
     assert len(find_transient(df)) == 1
+
+
+def test_all_early_tips_marked_without_representatives():
+    #        0
+    #      /   \
+    #     1     2
+    #    / \   /|\
+    #   3   4 5 6 7
+    # early {3, 4} are transient; early {5, 6} both sit beside late 7
+    df = make_df([0, 0, 0, 1, 1, 2, 2, 2], early={3, 4, 5, 6}, late={7})
+    res = mark_persistent_tips(
+        df,
+        early="is_early",
+        late="is_late",
+        mark_transient_as="is_transient",
+        representatives=False,
+    )
+    assert sorted(res.loc[res["is_persistent"], "label"]) == [5, 6]
+    assert sorted(res.loc[res["is_transient"], "label"]) == [3, 4]
