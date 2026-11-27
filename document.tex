@@ -1,0 +1,84 @@
+\usepackage{graphicx}
+% unless \nofake is defined, render graphics that are available, and draw
+% missing ones (e.g., figures from paper branch submodules) as black boxes,
+% like graphicx's demo option
+\makeatletter
+\newif\iffake@found
+\def\fake@checkgraphic#1{%
+  \global\fake@foundfalse
+  \begingroup
+  \ifx\Ginput@path\@undefined\else\let\input@path\Ginput@path\fi
+  \filename@parse{#1}%
+  \ifx\filename@ext\relax
+    \@for\fake@ext:=\Gin@extensions\do{%
+      \iffake@found\else
+        \IfFileExists{\filename@area\filename@base\fake@ext}%
+          {\global\fake@foundtrue}{}%
+      \fi}%
+  \else
+    \IfFileExists{#1}{\global\fake@foundtrue}{}%
+  \fi
+  \endgroup}
+\ifdefined\nofake\else
+\AtBeginDocument{%
+  \let\fake@Ginclude@graphics\Ginclude@graphics
+  \def\Ginclude@graphics#1{%
+    \fake@checkgraphic{#1}%
+    \iffake@found
+      \fake@Ginclude@graphics{#1}%
+    \else
+      \rule{\@ifundefined{Gin@@ewidth}{150pt}{\Gin@@ewidth}}%
+      {\@ifundefined{Gin@@eheight}{100pt}{\Gin@@eheight}}%
+    \fi}}
+\fi
+\makeatother
+
+\input{lib/dependencies.tex}
+\input{lib/pragmaonce.tex}
+
+\ifdefined\nodraft
+\else
+\usepackage{draftwatermark}
+\usepackage{lineno}
+\linenumbers
+\renewcommand{\linenumberfont}{\normalfont\small\color{red}}
+\fi
+
+
+\defaultbibliography{bibl}
+\defaultbibliographystyle{apalike-ejor}
+
+\begin{document}
+
+\input{boiler/frontmatter.tex}
+
+\begin{bibunit}
+
+\input{body/abstract.tex}
+
+\input{body/introduction.tex}
+
+\input{body/methods.tex}
+
+\input{body/results.tex}
+
+\input{body/conclusion.tex}
+
+\input{boiler/acknowledgement.tex}
+
+\putbib
+
+\end{bibunit}
+
+\clearpage
+\newpage
+
+\begin{bibunit}
+
+\input{supplement.tex}
+
+\putbib
+
+\end{bibunit}
+
+\end{document}

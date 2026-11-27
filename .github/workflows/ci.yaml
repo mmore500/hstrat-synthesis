@@ -11,18 +11,11 @@ on:
 jobs:
 
   latex:
-    name: Latex Build and Deploy
+    name: Latex Build
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/mmore500/teximage:sha-77b8179
       options: --user root
-    permissions:
-      contents: write
-      id-token: write
-      pages: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -30,21 +23,11 @@ jobs:
       - name: Build LaTeX document
         run: |
           trap 'cat *.log || true >> "$GITHUB_OUTPUT"' EXIT
-          make
-      - name: Prepare deploy directory
-        run: |
-          mkdir -p deploy
-          cp ${{ github.event.repository.name }}-draft.pdf deploy/
-          echo '<html><body><a href="${{ github.event.repository.name }}-draft.pdf">Download Manuscript Draft [PDF]</a></body></html>' > deploy/index.html
-      - name: Upload build artifact
+          latexmk -pdf -interaction=nonstopmode -file-line-error main.tex
+      - name: Upload PDF artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: manuscript
-          path: ${{ github.event.repository.name }}-draft.pdf
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: deploy
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: main-pdf
+          path: main.pdf
+          if-no-files-found: warn
