@@ -151,45 +151,53 @@ jobs:
           folder: . # The folder the action should deploy.
 
   tex:
-    name: Latex Build and Deploy
-    runs-on: ubuntu-22.04
+    name: Latex Build
+    runs-on: ubuntu-24.04
     env:
       # RE https://stackoverflow.com/a/40184923/17332200
       PIP_NO_CACHE_DIR: 1
     container:
       image: ghcr.io/mmore500/teximage:sha-77b8179
       options: --user root
-    permissions:
-      contents: write
-      id-token: write
-      pages: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
       - name: Build LaTeX document
         run: |
-          trap 'cat tex/*.log || true >> "$GITHUB_OUTPUT"' EXIT
-          make -C tex
+          trap 'cat paper/*.log || true >> "$GITHUB_OUTPUT"' EXIT
+          make -C paper
       - name: Prepare deploy directory
         run: |
           mkdir -p deploy
-          cp tex/*-draft.pdf deploy/
+          cp paper/*-draft.pdf deploy/
           echo "<html><body><a href="$(ls deploy)">Download Manuscript Draft [PDF]</a></body></html>" > deploy/index.html
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: manuscript
-          path: tex/*-draft.pdf
+          path: paper/*-draft.pdf
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: deploy
+
+  tex-deploy:
+    name: Latex Deploy
+    needs: tex
+    runs-on: ubuntu-24.04
+    # serialize Pages deploys to avoid concurrent runs timing out
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    permissions:
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        if: startsWith(github.ref, 'refs/tags/v')
         id: deployment
         uses: actions/deploy-pages@v4
 
