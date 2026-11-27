@@ -1,7 +1,5 @@
-\def\mydraft{
-\usepackage{draftwatermark}
-\usepackage{lineno}
-\linenumbers
-\renewcommand{\linenumberfont}{\normalfont\small\color{red}}
-}
-\input{main.tex}
+\documentclass{article}
+\def\nofake{true}
+
+\usepackage{import}
+\import{tex/}{document.tex}
