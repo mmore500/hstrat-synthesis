@@ -176,6 +176,8 @@ lazy-loader==0.5
     #   downstream
     #   hstrat
     #   phyloframe
+llvmlite==0.50.0
+    # via numba
 lru-dict==1.4.1
     # via hstrat
 markupsafe==3.0.3
@@ -240,6 +242,8 @@ networkx==3.6.1
     #   hstrat
 newick==1.11.0
     # via msprime
+numba==0.68.1
+    # via -r requirements.in
 numpy==2.1.2
     # via
     #   -r requirements.in
@@ -254,6 +258,7 @@ numpy==2.1.2
     #   iplotx
     #   matplotlib
     #   msprime
+    #   numba
     #   pandas
     #   patsy
     #   pecking
