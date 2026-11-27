@@ -6,6 +6,8 @@ alifedata-phyloinformatics-convert==0.19.3
     #   hstrat
 annotated-types==0.7.0
     # via pydantic
+anyio==4.14.2
+    # via starlette
 anytree==2.13.0
     # via
     #   alifedata-phyloinformatics-convert
@@ -18,7 +20,6 @@ attrs==26.1.0
     # via
     #   demes
     #   jsonschema
-    #   pytest
     #   referencing
 autopep8==2.3.2
     # via nbqa
@@ -38,7 +39,7 @@ bitarray==3.8.1
     #   hstrat
 bitstring==4.4.0
     # via hstrat
-black==22.10.0
+black==26.10.0
     # via -r requirements.in
 bleach==6.3.0
     # via nbconvert
@@ -51,6 +52,8 @@ click==8.3.3
     #   alifedata-phyloinformatics-convert
     #   black
     #   keyname
+    #   marimo
+    #   uvicorn
 comm==0.2.3
     # via ipykernel
 contourpy==1.3.3
@@ -79,6 +82,8 @@ deprecated==1.2.13
     #   phyloframe
 distutils-strtobool==0.1.0
     # via teeplot
+docutils==0.23
+    # via marimo
 downstream==1.22.0
     # via hstrat
 ete3==3.1.3
@@ -95,12 +100,15 @@ fonttools==4.62.1
     # via matplotlib
 frozendict==2.4.7
     # via backstrip
-hstrat==1.25.0
+h11==0.16.0
+    # via uvicorn
+hstrat==1.26.2
     # via -r requirements.in
 hurry-filesize==0.9
     # via nbmetalog
 idna==3.14
     # via
+    #   anyio
     #   requests
     #   yarl
 importlib-metadata==9.0.0
@@ -129,8 +137,12 @@ iterpop==0.4.1
     # via
     #   alifedata-phyloinformatics-convert
     #   hstrat
+itsdangerous==2.2.0
+    # via marimo
 jedi==0.20.0
-    # via ipython
+    # via
+    #   ipython
+    #   marimo
 jinja2==3.0.3
     # via
     #   -r requirements.in
@@ -178,8 +190,16 @@ lazy-loader==0.5
     #   phyloframe
 llvmlite==0.50.0
     # via numba
+loro==1.19.0
+    # via marimo
 lru-dict==1.4.1
     # via hstrat
+marimo==0.23.2
+    # via -r requirements.in
+markdown==3.11.4
+    # via
+    #   marimo
+    #   pymdown-extensions
 markupsafe==3.0.3
     # via
     #   jinja2
@@ -209,6 +229,8 @@ more-itertools==9.1.0
     #   phyloframe
 mpmath==1.4.1
     # via hstrat
+msgspec==0.22.0
+    # via marimo
 msprime==1.3.4
     # via -r requirements.in
 multidict==6.7.1
@@ -219,6 +241,8 @@ mypy-extensions==1.1.0
     #   typing-inspect
 nanto==0.1.1
     # via alifedata-phyloinformatics-convert
+narwhals==2.29.0
+    # via marimo
 nb-clean==2.4.0
     # via -r requirements.in
 nbclient==0.10.4
@@ -285,9 +309,11 @@ ordered-set==4.1.0
 packaging==26.2
     # via
     #   astropy
+    #   black
     #   hstrat
     #   ipykernel
     #   lazy-loader
+    #   marimo
     #   matplotlib
     #   nbconvert
     #   pandera
@@ -352,7 +378,9 @@ prompt-toolkit==3.0.52
 propcache==0.5.2
     # via yarl
 psutil==7.2.2
-    # via ipykernel
+    # via
+    #   ipykernel
+    #   marimo
 ptyprocess==0.7.0
     # via pexpect
 py==1.11.0
@@ -376,12 +404,15 @@ pyfonts==1.2.0
 pygments==2.20.0
     # via
     #   ipython
+    #   marimo
     #   nbconvert
+pymdown-extensions==10.21.3
+    # via marimo
 pymupdf==1.27.1
     # via -r requirements.in
 pyparsing==3.3.2
     # via matplotlib
-pytest==7.2.2
+pytest==8.3.5
     # via
     #   -r requirements.in
     #   pytest-xdist
@@ -396,16 +427,21 @@ python-slugify==8.0.4
     # via
     #   hstrat
     #   teeplot
+pytokens==0.4.1
+    # via black
 pytz==2026.2
     # via pandas
 pyyaml==6.0.3
     # via
     #   astropy
+    #   marimo
     #   nbmetalog
+    #   pymdown-extensions
 pyzmq==27.1.0
     # via
     #   ipykernel
     #   jupyter-client
+    #   marimo
 referencing==0.37.0
     # via
     #   jsonschema
@@ -455,6 +491,8 @@ sortedcontainers==2.4.0
     #   phyloframe
 soupsieve==2.8.3
     # via beautifulsoup4
+starlette==1.10.0
+    # via marimo
 statsmodels==0.14.6
     # via
     #   hstrat
@@ -473,6 +511,8 @@ tokenize-rt==6.2.0
     # via nbqa
 tomli==2.4.1
     # via nbqa
+tomlkit==0.15.3
+    # via marimo
 tornado==6.5.5
     # via
     #   ipykernel
@@ -504,6 +544,7 @@ typeguard==4.5.1
 typing-extensions==4.15.0
     # via
     #   alifedata-phyloinformatics-convert
+    #   anyio
     #   beautifulsoup4
     #   hstrat
     #   pandera
@@ -511,6 +552,7 @@ typing-extensions==4.15.0
     #   pydantic
     #   pydantic-core
     #   referencing
+    #   starlette
     #   teeplot
     #   typeguard
     #   typing-inspect
@@ -525,6 +567,8 @@ urllib3==2.7.0
     # via requests
 uv==0.4.20
     # via -r requirements.in
+uvicorn==0.54.0
+    # via marimo
 validators==0.35.0
     # via alifedata-phyloinformatics-convert
 watermark==2.4.3
@@ -537,6 +581,8 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
+websockets==17.4
+    # via marimo
 wrapt==1.17.3
     # via deprecated
 yarl==1.23.0

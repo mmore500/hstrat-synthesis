@@ -87,24 +87,36 @@ def find_parent_candidates(
     ]
 
 
-def make_inherited_mask(t: int) -> np.uint64:
+def find_deposit_site(t: int, time_dilation: int = 1):
+    if t % time_dilation:
+        return None
+    return dstream.steady_algo.assign_storage_site(64, t // time_dilation)
+
+
+def make_inherited_mask(t: int, time_dilation: int = 1) -> np.uint64:
     """Mask for bits not deposited at step t."""
-    site = dstream.steady_algo.assign_storage_site(64, t)
+    site = find_deposit_site(t, time_dilation)
     if site is None:
         return np.uint64((1 << 64) - 1)
     return np.uint64(((1 << 64) - 1) ^ (1 << (63 - site)))
 
 
 @pytest.mark.parametrize("name", RULES)
-def test_marker_inheritance_and_deposit(name: str):
+@pytest.mark.parametrize("time_dilation", [1, 3])
+def test_marker_inheritance_and_deposit(name: str, time_dilation: int):
     rule, seed_pattern = RULES[name]
-    tracker = FastCATracker(rule, make_grid(seed_pattern), dstream.steady_algo)
+    tracker = FastCATracker(
+        rule,
+        make_grid(seed_pattern),
+        dstream.steady_algo,
+        time_dilation=time_dilation,
+    )
     for t in range(1, 201):
         prev_cells, prev_markers = tracker.cells.copy(), tracker.markers.copy()
         tracker.step()
         assert tracker.t == t
-        site = dstream.steady_algo.assign_storage_site(64, t)
-        keep = make_inherited_mask(t)
+        site = find_deposit_site(t, time_dilation)
+        keep = make_inherited_mask(t, time_dilation)
         deposited = []
         for row, col in np.argwhere(tracker.cells):
             marker = tracker.markers[row, col]
@@ -160,10 +172,17 @@ def test_seed_decorrelates_markers():
     assert (first.markers[alive] != second.markers[alive]).mean() > 0.9
 
 
-def test_make_population_df():
+@pytest.mark.parametrize("time_dilation", [1, 4])
+def test_make_population_df(time_dilation: int):
     rule, seed_pattern = RULES["outlier"]
-    tracker = FastCATracker(rule, make_grid(seed_pattern), dstream.steady_algo)
+    tracker = FastCATracker(
+        rule,
+        make_grid(seed_pattern),
+        dstream.steady_algo,
+        time_dilation=time_dilation,
+    )
     tracker.step(300)
+    assert tracker.num_deposits == 300 // time_dilation + 1
     df = tracker.make_population_df()
     positions = np.argwhere(tracker.cells)
     assert len(df) == tracker.num_alive == len(positions)
@@ -178,7 +197,7 @@ def test_make_population_df():
         marker = int(tracker.markers[row, col])
         site_bits = [(marker >> (63 - site)) & 1 for site in range(64)]
         expected = (
-            np.asarray(300, dtype=">u4").tobytes().hex()
+            np.asarray(tracker.num_deposits, dtype=">u4").tobytes().hex()
             + np.packbits(site_bits, bitorder="big").tobytes().hex()
         )
         assert data_hex == expected
@@ -191,3 +210,35 @@ def test_reaching_grid_edge_raises():
     )
     with pytest.raises(AssertionError, match="edge of the grid"):
         tracker.step(500)
+
+
+@pytest.mark.parametrize("algo_name", ["steady_algo", "tilted_algo"])
+@pytest.mark.parametrize("time_dilation", [1, 5])
+def test_reported_deposits_match_surface(algo_name: str, time_dilation: int):
+    # the differentia held at each site must be the one that downstream
+    # says is there, given the number of deposits reported
+    algo = getattr(dstream, algo_name)
+    rule, seed_pattern = RULES["outlier"]
+    tracker = FastCATracker(
+        rule, make_grid(seed_pattern), algo, time_dilation=time_dilation
+    )
+    last_deposit = {0: 0}  # site -> index of deposit, as tracker makes them
+    for t in range(1, 701):
+        tracker.step()
+        if t % time_dilation == 0:
+            site = algo.assign_storage_site(64, t // time_dilation)
+            if site is not None:
+                last_deposit[site] = t // time_dilation
+    expected = list(algo.lookup_ingest_times_eager(64, tracker.num_deposits))
+    assert [last_deposit[site] for site in range(64)] == expected
+
+
+def test_snapshot():
+    rule, seed_pattern = RULES["outlier"]
+    tracker = FastCATracker(rule, make_grid(seed_pattern), dstream.steady_algo)
+    num_early = tracker.step(200).snapshot().num_alive
+    df = tracker.step(100).reconstruct_phylogeny()
+    assert (df["snapshot_step"] == 200).sum() == num_early
+    assert (df["snapshot_step"] == 300).sum() == tracker.num_alive
+    assert df["extant"].sum() == tracker.num_alive
+    assert df.loc[df["extant"], "snapshot_step"].eq(300).all()
