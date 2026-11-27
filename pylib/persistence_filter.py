@@ -51,7 +51,7 @@ def _mark_persistent_tips(
         elif not is_claimed[top[i]]:
             is_claimed[top[i]] = True
             is_transient[i] = True
-    return is_persistent, is_transient
+    return is_persistent, is_transient, home >= 0
 
 
 def mark_persistent_tips(
@@ -61,6 +61,7 @@ def mark_persistent_tips(
     late: str,
     mark_as: str = "is_persistent",
     mark_transient_as: typing.Optional[str] = None,
+    representatives: bool = True,
 ) -> pd.DataFrame:
     """Mark one early tip for each lineage that persists to a late tip.
 
@@ -89,6 +90,10 @@ def mark_persistent_tips(
         Name of boolean output column.
     mark_transient_as : str, optional
         Name of boolean output column for transient lineages, if wanted.
+    representatives : bool, default True
+        If False, every early tip is marked instead of one per lineage:
+        persistent if it is among the closest early relatives of some late
+        tip, and transient otherwise.
 
     Returns
     -------
@@ -100,11 +105,15 @@ def mark_persistent_tips(
     phylogeny_df = pfl.alifestd_topological_sort(phylogeny_df)
     phylogeny_df = pfl.alifestd_assign_contiguous_ids(phylogeny_df)
     phylogeny_df = phylogeny_df.reset_index(drop=True)
-    is_persistent, is_transient = _mark_persistent_tips(
+    is_early = phylogeny_df[early].to_numpy(dtype=np.bool_)
+    is_persistent, is_transient, has_home = _mark_persistent_tips(
         phylogeny_df["ancestor_id"].to_numpy(dtype=np.int64),
-        phylogeny_df[early].to_numpy(dtype=np.bool_),
+        is_early,
         phylogeny_df[late].to_numpy(dtype=np.bool_),
     )
+    if not representatives:
+        is_persistent = is_early & has_home
+        is_transient = is_early & ~has_home
     phylogeny_df[mark_as] = is_persistent
     if mark_transient_as is not None:
         phylogeny_df[mark_transient_as] = is_transient
