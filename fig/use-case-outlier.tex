@@ -1,11 +1,15 @@
 % graphic source: binder/2026-11-27-outlier-plots-scaled-control.ipynb
+% notebook as executed for the pinned graphics (binder pin on paper branch):
+%   https://github.com/mmore500/hstrat-synthesis/blob/5e6f25c96f503ee5c07c5d879d4567c6c41c9b59/binder/2026-11-27-outlier-plots-scaled-control.ipynb
+% notebook source at the commit those graphics were generated from:
+%   https://github.com/mmore500/hstrat-synthesis/blob/b34c8b511335ec1acf1bcc6accbfdcb2ae935770/binder/2026-11-27-outlier-plots-scaled-control.ipynb
 \begin{figure}
 
 \newcommand{\outlierteeplots}{../binder/binder-2026-11-27-outlier-plots-scaled-control.ipynb/binder/teeplots/2026-11-27-outlier-plots-scaled-control}
 
 \begin{subfigure}[t]{0.32\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{\outlierteeplots/ca=outlier+viz=plot-regions+ext=.pdf}
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=outlier+viz=plot-persistence-filter+ext=.pdf}
     \caption{\footnotesize
     TODO.
     }
@@ -32,7 +36,8 @@
 
 \begin{subfigure}[t]{0.32\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{\outlierteeplots/ca=control+viz=plot-regions+ext=.pdf}
+    % legend is shared with the panel above; clip it off the top
+    \includegraphics[width=\linewidth, trim={0 0 0 40bp}, clip]{\outlierteeplots/ca=control+viz=plot-persistence-filter+ext=.pdf}
     \caption{\footnotesize
     TODO.
     }
@@ -62,8 +67,8 @@
 \footnotesize
 Top row: outlier cellular automaton, run to 20 times the extant population of the original run.
 Bottom row: non-replicator control (3-4 Life) grown to matching population.
-Left: extant cells, with those sampled as ``border'' and ``middle'' highlighted.
-Center: trees of early-snapshot lineages that persist to each sampled region, and their Colless-like imbalance against leaf-split and edge-split null models.
+Left: extant cells, with those sampled as ``border'' and ``middle'' highlighted, overlaid with the persistent lineages of an earlier snapshot that each sampled region descends from and with that snapshot's transient lineages.
+Center: trees of the persistent lineages for each sampled region, and their Colless-like imbalance against leaf-split and edge-split null models.
 Right: inner branch lengths of the same trees.
 TODO.
 }
