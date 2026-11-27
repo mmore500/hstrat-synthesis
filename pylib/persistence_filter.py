@@ -1,5 +1,7 @@
 """Pick out early-sampled tips whose lineages persist to a later sample."""
 
+import typing
+
 import numba as nb
 import numpy as np
 import pandas as pd
@@ -27,18 +29,29 @@ def _mark_persistent_tips(
 
     # nearest junction at or above each node, across late-free branches only
     home = np.full(n, -1, dtype=np.int64)
+    # topmost node of the late-free subtree holding each late-free node
+    top = np.full(n, -1, dtype=np.int64)
     is_claimed = np.zeros(n, dtype=np.bool_)
     is_persistent = np.zeros(n, dtype=np.bool_)
+    is_transient = np.zeros(n, dtype=np.bool_)
     for i in range(n):
         a = ancestor_ids[i]
         if is_junction[i]:
             home[i] = i
         elif a != i and not has_late[i]:
             home[i] = home[a]
-        if is_early[i] and home[i] >= 0 and not is_claimed[home[i]]:
-            is_claimed[home[i]] = True
-            is_persistent[i] = True
-    return is_persistent
+        if not has_late[i]:
+            top[i] = top[a] if a != i and not has_late[a] else i
+        if not is_early[i]:
+            continue
+        if home[i] >= 0:
+            if not is_claimed[home[i]]:
+                is_claimed[home[i]] = True
+                is_persistent[i] = True
+        elif not is_claimed[top[i]]:
+            is_claimed[top[i]] = True
+            is_transient[i] = True
+    return is_persistent, is_transient
 
 
 def mark_persistent_tips(
@@ -47,6 +60,7 @@ def mark_persistent_tips(
     early: str,
     late: str,
     mark_as: str = "is_persistent",
+    mark_transient_as: typing.Optional[str] = None,
 ) -> pd.DataFrame:
     """Mark one early tip for each lineage that persists to a late tip.
 
@@ -61,6 +75,10 @@ def mark_persistent_tips(
     Which of those equally close early tips is marked is arbitrary, so the
     marked tip need not itself be an ancestor of the late tips.
 
+    Optionally, one early tip is also marked for each transient lineage: a
+    clade of early tips without late tips that is not among the closest early
+    relatives of any late tip.
+
     Parameters
     ----------
     phylogeny_df : pd.DataFrame
@@ -69,20 +87,25 @@ def mark_persistent_tips(
         Names of boolean columns flagging early- and late-sampled tips.
     mark_as : str, default "is_persistent"
         Name of boolean output column.
+    mark_transient_as : str, optional
+        Name of boolean output column for transient lineages, if wanted.
 
     Returns
     -------
     pd.DataFrame
         Phylogeny, topologically sorted with contiguous ids, with the output
-        column added.
+        column(s) added.
     """
     phylogeny_df = pfl.alifestd_try_add_ancestor_id_col(phylogeny_df)
     phylogeny_df = pfl.alifestd_topological_sort(phylogeny_df)
     phylogeny_df = pfl.alifestd_assign_contiguous_ids(phylogeny_df)
     phylogeny_df = phylogeny_df.reset_index(drop=True)
-    phylogeny_df[mark_as] = _mark_persistent_tips(
+    is_persistent, is_transient = _mark_persistent_tips(
         phylogeny_df["ancestor_id"].to_numpy(dtype=np.int64),
         phylogeny_df[early].to_numpy(dtype=np.bool_),
         phylogeny_df[late].to_numpy(dtype=np.bool_),
     )
+    phylogeny_df[mark_as] = is_persistent
+    if mark_transient_as is not None:
+        phylogeny_df[mark_transient_as] = is_transient
     return phylogeny_df
