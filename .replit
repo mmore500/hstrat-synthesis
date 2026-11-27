@@ -1,4 +1,4 @@
-run = "make -C tex fresher"
+run = "make -C paper fresher"
 hidden = [".config"]
 
 [nix]
