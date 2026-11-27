@@ -172,18 +172,18 @@ jobs:
           submodules: 'recursive'
       - name: Build LaTeX document
         run: |
-          trap 'cat tex/*.log || true >> "$GITHUB_OUTPUT"' EXIT
-          make -C tex
+          trap 'cat paper/*.log || true >> "$GITHUB_OUTPUT"' EXIT
+          make -C paper
       - name: Prepare deploy directory
         run: |
           mkdir -p deploy
-          cp tex/*-draft.pdf deploy/
+          cp paper/*-draft.pdf deploy/
           echo "<html><body><a href="$(ls deploy)">Download Manuscript Draft [PDF]</a></body></html>" > deploy/index.html
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: manuscript
-          path: tex/*-draft.pdf
+          path: paper/*-draft.pdf
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
