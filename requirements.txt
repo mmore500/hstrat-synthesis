@@ -102,7 +102,7 @@ frozendict==2.4.7
     # via backstrip
 h11==0.16.0
     # via uvicorn
-hstrat==1.25.0
+hstrat==1.26.2
     # via -r requirements.in
 hurry-filesize==0.9
     # via nbmetalog
@@ -188,6 +188,8 @@ lazy-loader==0.5
     #   downstream
     #   hstrat
     #   phyloframe
+llvmlite==0.50.0
+    # via numba
 loro==1.19.0
     # via marimo
 lru-dict==1.4.1
@@ -264,6 +266,8 @@ networkx==3.6.1
     #   hstrat
 newick==1.11.0
     # via msprime
+numba==0.68.1
+    # via -r requirements.in
 numpy==2.1.2
     # via
     #   -r requirements.in
@@ -278,6 +282,7 @@ numpy==2.1.2
     #   iplotx
     #   matplotlib
     #   msprime
+    #   numba
     #   pandas
     #   patsy
     #   pecking
