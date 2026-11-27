@@ -1,0 +1,71 @@
+% graphic source: binder/2026-11-27-outlier-plots-scaled-control.ipynb
+\begin{figure}
+
+\newcommand{\outlierteeplots}{../binder/binder-2026-11-27-outlier-plots-scaled-control.ipynb/binder/teeplots/2026-11-27-outlier-plots-scaled-control}
+
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=outlier+viz=plot-regions+ext=.pdf}
+    \caption{\footnotesize
+    TODO.
+    }
+    \label{fig:use-case-outlier:outlier-regions}
+\end{subfigure}%
+\hfill%
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=outlier+viz=plot_colless_data+ext=.pdf}
+    \caption{\footnotesize
+    TODO.
+    }
+    \label{fig:use-case-outlier:outlier-imbalance}
+\end{subfigure}%
+\hfill%
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=outlier+viz=plot_branch_length_data+ext=.pdf}
+    \caption{\footnotesize
+    TODO.
+    }
+    \label{fig:use-case-outlier:outlier-branch-lengths}
+\end{subfigure}
+
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=control+viz=plot-regions+ext=.pdf}
+    \caption{\footnotesize
+    TODO.
+    }
+    \label{fig:use-case-outlier:control-regions}
+\end{subfigure}%
+\hfill%
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=control+viz=plot_colless_data+ext=.pdf}
+    \caption{\footnotesize
+    TODO.
+    }
+    \label{fig:use-case-outlier:control-imbalance}
+\end{subfigure}%
+\hfill%
+\begin{subfigure}[t]{0.32\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{\outlierteeplots/ca=control+viz=plot_branch_length_data+ext=.pdf}
+    \caption{\footnotesize
+    TODO.
+    }
+    \label{fig:use-case-outlier:control-branch-lengths}
+\end{subfigure}
+
+\caption{%
+\textbf{TODO.}
+\footnotesize
+Top row: outlier cellular automaton, run to 20 times the extant population of the original run.
+Bottom row: non-replicator control (3-4 Life) grown to matching population.
+Left: extant cells, with those sampled as ``border'' and ``middle'' highlighted.
+Center: trees of early-snapshot lineages that persist to each sampled region, and their Colless-like imbalance against leaf-split and edge-split null models.
+Right: inner branch lengths of the same trees.
+TODO.
+}
+\label{fig:use-case-outlier}
+\end{figure}
