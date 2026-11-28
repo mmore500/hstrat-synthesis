@@ -44,3 +44,8 @@
 	path = tex
 	url = https://github.com/mmore500/hstrat-synthesis.git
 	branch = tex
+[submodule "binder/binder-2026-11-27-outlier-plots-scaled-control.ipynb"]
+	path = binder/binder-2026-11-27-outlier-plots-scaled-control.ipynb
+	url = https://github.com/mmore500/hstrat-synthesis.git
+	branch = binder-2026-11-27-outlier-plots-scaled-control.ipynb
+	shallow = true
