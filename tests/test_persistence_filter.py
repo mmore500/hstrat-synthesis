@@ -143,29 +143,3 @@ def test_all_early_tips_marked_without_representatives():
     )
     assert sorted(res.loc[res["is_persistent"], "label"]) == [5, 6]
     assert sorted(res.loc[res["is_transient"], "label"]) == [3, 4]
-
-
-def test_relative_of_late_tips():
-    #        0
-    #      /   \
-    #     1     2
-    #    /|\   / \
-    #   3 4 5 6   7
-    #       |     |
-    #      8,9    10
-    df = make_df(
-        [0, 0, 0, 1, 1, 1, 2, 2, 5, 5, 7],
-        early={3, 4, 6},
-        late={8, 9, 10},
-    )
-    res = mark_persistent_tips(
-        df, early="is_early", late="is_late", mark_relative_as="relative"
-    )
-    label = res.set_index("id")["label"]
-    relatives = {
-        row["label"]: label[row["relative"]]
-        for __, row in res[res["is_late"]].iterrows()
-    }
-    assert relatives[8] == relatives[9] and relatives[8] in (3, 4)
-    assert relatives[10] == 6
-    assert (res.loc[~res["is_late"], "relative"] == -1).all()
